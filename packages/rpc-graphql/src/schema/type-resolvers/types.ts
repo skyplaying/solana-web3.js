@@ -1,6 +1,6 @@
 import { Kind } from 'graphql';
 
-import { resolveAccount } from './account';
+import { resolveAccount } from '../../resolvers/account';
 
 const stringScalarAlias = {
     __parseLiteral(ast: { kind: Kind; value: bigint | boolean | number | string }): string | null {
@@ -61,6 +61,33 @@ export const typeTypeResolvers = {
         FROZEN: 'frozen',
         INITIALIZED: 'initialized',
         UNINITIALIZED: 'uninitialized',
+    },
+    SplTokenExtensionType: {
+        CONFIDENTIAL_TRANSFER_ACCOUNT: 'confidentialTransferAccount',
+        CONFIDENTIAL_TRANSFER_FEE_AMOUNT: 'confidentialTransferFeeAmount',
+        CONFIDENTIAL_TRANSFER_FEE_CONFIG: 'confidentialTransferFeeConfig',
+        CONFIDENTIAL_TRANSFER_MINT: 'confidentialTransferMint',
+        CPI_GUARD: 'cpiGuard',
+        DEFAULT_ACCOUNT_STATE: 'defaultAccountState',
+        GROUP_MEMBER_POINTER: 'groupMemberPointer',
+        GROUP_POINTER: 'groupPointer',
+        IMMUTABLE_OWNER: 'immutableOwner',
+        INTEREST_BEARING_CONFIG: 'interestBearingConfig',
+        MEMO_TRANSFER: 'memoTransfer',
+        METADATA_POINTER: 'metadataPointer',
+        MINT_CLOSE_AUTHORITY: 'mintCloseAuthority',
+        NON_TRANSFERABLE: 'nonTransferable',
+        NON_TRANSFERABLE_ACCOUNT: 'nonTransferableAccount',
+        PERMANENT_DELEGATE: 'permanentDelegate',
+        TOKEN_GROUP: 'tokenGroup',
+        TOKEN_GROUP_MEMBER: 'tokenGroupMember',
+        TOKEN_METADATA: 'tokenMetadata',
+        TRANSFER_FEE_AMOUNT: 'transferFeeAmount',
+        TRANSFER_FEE_CONFIG: 'transferFeeConfig',
+        TRANSFER_HOOK: 'transferHook',
+        TRANSFER_HOOK_ACCOUNT: 'transferHookAccount',
+        UNINITIALIZED: 'uninitialized',
+        UNPARSEABLE_EXTENSION: 'unparseableExtension',
     },
     TokenBalance: {
         mint: resolveAccount('mint'),

@@ -1,7 +1,7 @@
-import { resolveAccount } from './account';
-import { InstructionResult } from './transaction';
+import { resolveAccount } from '../../resolvers/account';
+import { InstructionResult } from '../../resolvers/transaction';
 
-export const instructionResolvers = {
+export const instructionTypeResolvers = {
     AdvanceNonceAccountInstruction: {
         nonceAccount: resolveAccount('nonceAccount'),
         nonceAuthority: resolveAccount('nonceAuthority'),
@@ -436,6 +436,13 @@ export const instructionResolvers = {
         mint: resolveAccount('mint'),
         mintAuthority: resolveAccount('mintAuthority'),
         multisigMintAuthority: resolveAccount('multisigMintAuthority'),
+    },
+    SplTokenReallocate: {
+        account: resolveAccount('account'),
+        multisigOwner: resolveAccount('multisigOwner'),
+        owner: resolveAccount('owner'),
+        payer: resolveAccount('payer'),
+        systemProgram: resolveAccount('systemProgram'),
     },
     SplTokenRevokeInstruction: {
         multisigOwner: resolveAccount('multisigOwner'),
@@ -952,6 +959,9 @@ export const instructionResolvers = {
                     }
                     if (jsonParsedConfigs.instructionType === 'emitTokenMetadata') {
                         return 'SplTokenMetadataEmit';
+                    }
+                    if (jsonParsedConfigs?.instructionType === 'reallocate') {
+                        return 'SplTokenReallocate';
                     }
                 }
                 if (jsonParsedConfigs.programName === 'stake') {
