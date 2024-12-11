@@ -65,7 +65,7 @@ describe('getProgramAccounts', () => {
                                 executable: false,
                                 lamports: 5000000n,
                                 owner: 'DXngmJfjurhnAwbMPgpUGPH6qNvetCKRJ6PiD4ag4PTj',
-                                rentEpoch: 18446744073709551616n, // TODO: This number loses precision
+                                rentEpoch: 18446744073709551615n,
                                 space: 9n,
                             },
                             pubkey: 'CcYNb7WqpjaMrNr7B1mapaNfWctZRH7LyAjWRLBGt1Fk',
@@ -92,7 +92,7 @@ describe('getProgramAccounts', () => {
                     'context.__code',
                     SOLANA_ERROR__JSON_RPC__SERVER_ERROR_MIN_CONTEXT_SLOT_NOT_REACHED,
                 ),
-                expect(sendPromise).rejects.toHaveProperty('context.contextSlot', expect.any(Number)),
+                expect(sendPromise).rejects.toHaveProperty('context.contextSlot', expect.any(BigInt)),
             ]);
         });
     });
@@ -126,7 +126,7 @@ describe('getProgramAccounts', () => {
                             executable: false,
                             lamports: 5000000n,
                             owner: 'AmtpVzo6H6qQCP9dH9wfu5hfa8kKaAFpTJ4aamPYR6V6',
-                            rentEpoch: 18446744073709551616n, // TODO: This number loses precision
+                            rentEpoch: 18446744073709551615n,
                             space: 9n,
                         },
                         pubkey: 'C5q1p5UiCVrt6vcLJDGcS4AZ98fahKyb9XkDRdqATK17',
@@ -137,7 +137,7 @@ describe('getProgramAccounts', () => {
                             executable: false,
                             lamports: 5000000n,
                             owner: 'AmtpVzo6H6qQCP9dH9wfu5hfa8kKaAFpTJ4aamPYR6V6',
-                            rentEpoch: 18446744073709551616n, // TODO: This number loses precision
+                            rentEpoch: 18446744073709551615n,
                             space: 9n,
                         },
                         pubkey: 'Hhsoev7Apk5dMbktzLUrsTHuMq9e9GSYBaLcnN2PfdKS',
@@ -1082,24 +1082,6 @@ describe('getProgramAccounts', () => {
                                     space: 33n,
                                 },
                                 pubkey: 'SysvarEpochSchedu1e111111111111111111111111',
-                            },
-                            {
-                                account: {
-                                    data: {
-                                        parsed: {
-                                            info: expect.any(Object),
-                                            type: 'fees',
-                                        },
-                                        program: 'sysvar',
-                                        space: 8n,
-                                    },
-                                    executable: false,
-                                    lamports: 946560n,
-                                    owner: 'Sysvar1111111111111111111111111111111111111',
-                                    rentEpoch: expect.any(BigInt),
-                                    space: 8n,
-                                },
-                                pubkey: 'SysvarFees111111111111111111111111111111111',
                             },
                             {
                                 account: {
@@ -2063,7 +2045,7 @@ describe('getProgramAccounts', () => {
                                     data: {
                                         parsed: {
                                             info: expect.any(Object),
-                                            type: 'fees',
+                                            type: 'lastRestartSlot',
                                         },
                                         program: 'sysvar',
                                         space: 8n,
@@ -2074,7 +2056,7 @@ describe('getProgramAccounts', () => {
                                     rentEpoch: expect.any(BigInt),
                                     space: 8n,
                                 },
-                                pubkey: 'SysvarFees111111111111111111111111111111111',
+                                pubkey: 'SysvarLastRestartS1ot1111111111111111111111',
                             },
                             {
                                 account: {
@@ -2288,6 +2270,176 @@ describe('getProgramAccounts', () => {
                 .send();
 
             expect(accountInfo[0].account.data).toStrictEqual(['dGVzdCA=', 'base64']);
+        });
+    });
+
+    describe('when called with a data size filter', () => {
+        it('returns the matching accounts', async () => {
+            expect.assertions(3);
+            const program =
+                'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as Address<'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'>;
+
+            const programAccounts = await rpc
+                .getProgramAccounts(program, {
+                    encoding: 'jsonParsed',
+                    filters: [
+                        {
+                            dataSize: 165n, // Token account size
+                        },
+                    ],
+                })
+                .send();
+
+            programAccounts.forEach(item => {
+                expect(item).toMatchObject({
+                    account: {
+                        data: {
+                            parsed: {
+                                info: {
+                                    isNative: expect.any(Boolean),
+                                    mint: expect.any(String),
+                                    owner: expect.any(String),
+                                    state: expect.any(String),
+                                    tokenAmount: {
+                                        amount: expect.any(String),
+                                        decimals: expect.any(Number),
+                                        uiAmount: expect.any(Number),
+                                        uiAmountString: expect.any(String),
+                                    },
+                                },
+                                type: 'account',
+                            },
+                            program: 'spl-token',
+                            space: 165n, // Token account space
+                        },
+                        executable: false,
+                        lamports: expect.any(BigInt),
+                        owner: expect.any(String),
+                        rentEpoch: expect.any(BigInt),
+                        space: 165n, // Token account space
+                    },
+                    pubkey: expect.any(String),
+                });
+            });
+        });
+    });
+
+    describe('when called with a memcmpy filter', () => {
+        it('returns the matching accounts', async () => {
+            expect.assertions(1);
+            // See scripts/fixtures/spl-token-mint-account.json
+            const mint =
+                'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr' as Address<'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'>;
+            const program =
+                'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as Address<'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'>;
+
+            const programAccounts = await rpc
+                .getProgramAccounts(program, {
+                    encoding: 'jsonParsed',
+                    filters: [
+                        {
+                            memcmp: {
+                                bytes: mint,
+                                encoding: 'base58',
+                                offset: 0n,
+                            },
+                        },
+                    ],
+                })
+                .send();
+
+            programAccounts.forEach(item => {
+                expect(item).toMatchObject({
+                    account: {
+                        data: {
+                            parsed: {
+                                info: {
+                                    isNative: expect.any(Boolean),
+                                    mint, // Matches mint address provided in filter.
+                                    owner: expect.any(String),
+                                    state: expect.any(String),
+                                    tokenAmount: {
+                                        amount: expect.any(String),
+                                        decimals: expect.any(Number),
+                                        uiAmount: expect.any(Number),
+                                        uiAmountString: expect.any(String),
+                                    },
+                                },
+                                type: 'account',
+                            },
+                            program: 'spl-token',
+                            space: 165n, // Token account space
+                        },
+                        executable: false,
+                        lamports: expect.any(BigInt),
+                        owner: expect.any(String),
+                        rentEpoch: expect.any(BigInt),
+                        space: 165n, // Token account space
+                    },
+                    pubkey: expect.any(String),
+                });
+            });
+        });
+    });
+
+    describe('when called with both a data size and a memcmpy filter', () => {
+        it('returns the matching accounts', async () => {
+            expect.assertions(1);
+            // See scripts/fixtures/spl-token-mint-account.json
+            const mint =
+                'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr' as Address<'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'>;
+            const program =
+                'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as Address<'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'>;
+
+            const programAccounts = await rpc
+                .getProgramAccounts(program, {
+                    encoding: 'jsonParsed',
+                    filters: [
+                        {
+                            dataSize: 165n, // Token account size
+                        },
+                        {
+                            memcmp: {
+                                bytes: mint,
+                                encoding: 'base58',
+                                offset: 0n,
+                            },
+                        },
+                    ],
+                })
+                .send();
+
+            programAccounts.forEach(item => {
+                expect(item).toMatchObject({
+                    account: {
+                        data: {
+                            parsed: {
+                                info: {
+                                    isNative: expect.any(Boolean),
+                                    mint, // Matches mint address provided in filter.
+                                    owner: expect.any(String),
+                                    state: expect.any(String),
+                                    tokenAmount: {
+                                        amount: expect.any(String),
+                                        decimals: expect.any(Number),
+                                        uiAmount: expect.any(Number),
+                                        uiAmountString: expect.any(String),
+                                    },
+                                },
+                                type: 'account',
+                            },
+                            program: 'spl-token',
+                            space: 165n, // Token account space
+                        },
+                        executable: false,
+                        lamports: expect.any(BigInt),
+                        owner: expect.any(String),
+                        rentEpoch: expect.any(BigInt),
+                        space: 165n, // Token account space
+                    },
+                    pubkey: expect.any(String),
+                });
+            });
         });
     });
 });

@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-
 import type { RpcSubscriptions } from '@solana/rpc-subscriptions-spec';
 import type { Slot } from '@solana/rpc-types';
 
 import type { SlotNotificationsApi } from '../slot-notifications';
 
-async () => {
+void (async () => {
     const rpcSubcriptions = null as unknown as RpcSubscriptions<SlotNotificationsApi>;
     const slotNotifications = await rpcSubcriptions
         .slotNotifications()
@@ -21,4 +19,4 @@ async () => {
 
     // @ts-expect-error Takes no params.
     rpcSubscriptions.slotNotifications({ commitment: 'finalized' });
-};
+});

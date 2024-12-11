@@ -1,22 +1,21 @@
-import type { RpcApiMethods } from '@solana/rpc-spec';
-import type { Commitment, Slot, U64UnsafeBeyond2Pow53Minus1 } from '@solana/rpc-types';
+import type { Commitment, Slot } from '@solana/rpc-types';
 
 type GetEpochInfoApiResponse = Readonly<{
     /** the current slot */
     absoluteSlot: Slot;
     /** the current block height */
-    blockHeight: U64UnsafeBeyond2Pow53Minus1;
+    blockHeight: bigint;
     /** the current epoch */
-    epoch: U64UnsafeBeyond2Pow53Minus1;
+    epoch: bigint;
     /** the current slot relative to the start of the current epoch */
-    slotIndex: U64UnsafeBeyond2Pow53Minus1;
+    slotIndex: bigint;
     /** the number of slots in this epoch */
-    slotsInEpoch: U64UnsafeBeyond2Pow53Minus1;
+    slotsInEpoch: bigint;
     /** total number of transactions processed without error since genesis */
-    transactionCount: U64UnsafeBeyond2Pow53Minus1 | null;
+    transactionCount: bigint | null;
 }>;
 
-export interface GetEpochInfoApi extends RpcApiMethods {
+export type GetEpochInfoApi = {
     /**
      * Returns the balance of the account of provided Pubkey
      */
@@ -26,4 +25,4 @@ export interface GetEpochInfoApi extends RpcApiMethods {
             minContextSlot?: Slot;
         }>,
     ): GetEpochInfoApiResponse;
-}
+};

@@ -1,10 +1,9 @@
-import type { RpcApiMethods } from '@solana/rpc-spec';
 import type { Slot, UnixTimestamp } from '@solana/rpc-types';
 
 /** Estimated production time, as Unix timestamp (seconds since the Unix epoch) */
 type GetBlockTimeApiResponse = UnixTimestamp;
 
-export interface GetBlockTimeApi extends RpcApiMethods {
+export type GetBlockTimeApi = {
     /**
      * Returns the estimated production time of a block.
      */
@@ -12,4 +11,4 @@ export interface GetBlockTimeApi extends RpcApiMethods {
         /** block number, identified by Slot */
         blockNumber: Slot,
     ): GetBlockTimeApiResponse;
-}
+};

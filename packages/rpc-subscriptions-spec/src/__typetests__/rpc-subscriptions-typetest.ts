@@ -1,13 +1,15 @@
 import { createSubscriptionRpc, RpcSubscriptions } from '../rpc-subscriptions';
-import { createRpcSubscriptionsApi, RpcSubscriptionsApiMethods } from '../rpc-subscriptions-api';
+import { createRpcSubscriptionsApi } from '../rpc-subscriptions-api';
 import { RpcSubscriptionsTransport } from '../rpc-subscriptions-transport';
 
-interface MySubscriptionApiMethods extends RpcSubscriptionsApiMethods {
+type MySubscriptionApiMethods = {
     bar(): string;
     foo(): number;
-}
+};
 
-const api = createRpcSubscriptionsApi<MySubscriptionApiMethods>();
+const api = createRpcSubscriptionsApi<MySubscriptionApiMethods>(
+    ...(null as unknown as Parameters<typeof createRpcSubscriptionsApi>),
+);
 const transport = null as unknown as RpcSubscriptionsTransport;
 
 createSubscriptionRpc({ api, transport }) satisfies RpcSubscriptions<MySubscriptionApiMethods>;

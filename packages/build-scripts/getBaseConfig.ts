@@ -1,8 +1,9 @@
 import { env } from 'node:process';
 
 import browsersListToEsBuild from 'browserslist-to-esbuild';
-import path from 'path';
 import { Format, Options } from 'tsup';
+
+import { DevFlagPlugin } from './dev-flag';
 
 type Platform =
     | 'browser'
@@ -35,9 +36,17 @@ export function getBaseConfig(platform: Platform, formats: Format[], _options: O
                                       __DEV__: `${isDebugBuild}`,
                                   };
                                   options.target = BROWSERSLIST_TARGETS;
+                              } else {
+                                  options.define = {
+                                      ...options.define,
+                                      // Preserve `process.env.NODE_ENV` in the output without
+                                      // replacing it. This allows consumers' bundlers to replace it
+                                      // as they see fit.
+                                      'process.env.NODE_ENV': 'process.env.NODE_ENV',
+                                  };
                               }
-                              options.inject = [path.resolve(__dirname, 'env-shim.ts')];
                           },
+                          esbuildPlugins: [DevFlagPlugin],
                           external: [
                               // Despite inlining `@solana/text-encoding-impl`, do not recursively inline `fastestsmallesttextencoderdecoder`.
                               'fastestsmallesttextencoderdecoder',
@@ -53,6 +62,7 @@ export function getBaseConfig(platform: Platform, formats: Format[], _options: O
                               // @noble/ed25519 is an ESM-only module, so we have to inline it in CJS builds.
                               ...(format === 'cjs' ? ['@noble/ed25519'] : []),
                               '@solana/crypto-impl',
+                              '@solana/event-target-impl',
                               '@solana/text-encoding-impl',
                               '@solana/ws-impl',
                           ],

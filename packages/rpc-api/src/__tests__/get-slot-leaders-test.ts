@@ -6,7 +6,7 @@ import { SOLANA_ERROR__JSON_RPC__INVALID_PARAMS, SolanaError } from '@solana/err
 import type { Rpc } from '@solana/rpc-spec';
 import path from 'path';
 
-import { GetSlotLeadersApi } from '../index';
+import { GetSlotLeadersApi, MinimumLedgerSlotApi } from '../index';
 import { createLocalhostSolanaRpc } from './__setup__';
 
 const validatorKeypairPath = path.resolve(__dirname, '../../../../test-ledger/validator-keypair.json');
@@ -31,7 +31,7 @@ async function getValidatorAddress() {
 }
 
 describe('getSlotLeaders', () => {
-    let rpc: Rpc<GetSlotLeadersApi>;
+    let rpc: Rpc<GetSlotLeadersApi & MinimumLedgerSlotApi>;
     beforeEach(() => {
         rpc = createLocalhostSolanaRpc();
     });
@@ -40,7 +40,7 @@ describe('getSlotLeaders', () => {
         // This will always be the local validator
         it('returns the node public keys', async () => {
             expect.assertions(2);
-            const minimumLedgerSlot = (await rpc.minimumLedgerSlot().send()) as bigint;
+            const minimumLedgerSlot = await rpc.minimumLedgerSlot().send();
 
             const result = await rpc.getSlotLeaders(minimumLedgerSlot, 3).send();
             expect(Array.isArray(result)).toBe(true);
@@ -68,7 +68,7 @@ describe('getSlotLeaders', () => {
     describe('when called with a `limit` greater than 5000', () => {
         it('throws an error', async () => {
             expect.assertions(1);
-            const minimumLedgerSlot = (await rpc.minimumLedgerSlot().send()) as bigint;
+            const minimumLedgerSlot = await rpc.minimumLedgerSlot().send();
 
             const sendPromise = rpc.getSlotLeaders(minimumLedgerSlot, 5001).send();
             await expect(sendPromise).rejects.toThrow(

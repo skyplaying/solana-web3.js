@@ -10,6 +10,7 @@ import { pipe } from '@solana/functional';
 import { AccountRole, IAccountLookupMeta, IAccountMeta, IInstruction } from '@solana/instructions';
 import type { Blockhash } from '@solana/rpc-types';
 
+import { AddressesByLookupTableAddress } from './addresses-by-lookup-table-address';
 import { setTransactionMessageLifetimeUsingBlockhash } from './blockhash';
 import { CompilableTransactionMessage } from './compilable-transaction-message';
 import { CompiledTransactionMessage } from './compile';
@@ -67,8 +68,6 @@ function getAccountMetas(message: CompiledTransactionMessage): IAccountMeta[] {
 
     return accountMetas;
 }
-
-export type AddressesByLookupTableAddress = { [lookupTableAddress: Address]: Address[] };
 
 function getAddressLookupMetas(
     compiledAddressTableLookups: ReturnType<typeof getCompiledAddressTableLookups>,
@@ -167,10 +166,10 @@ function getLifetimeConstraint(
         };
     } else {
         // We know these accounts are defined because we checked `isAdvanceNonceAccountInstruction`
-        const nonceAccountAddress = firstInstruction.accounts![0].address;
+        const nonceAccountAddress = firstInstruction.accounts[0].address;
         assertIsAddress(nonceAccountAddress);
 
-        const nonceAuthorityAddress = firstInstruction.accounts![2].address;
+        const nonceAuthorityAddress = firstInstruction.accounts[2].address;
         assertIsAddress(nonceAuthorityAddress);
 
         return {

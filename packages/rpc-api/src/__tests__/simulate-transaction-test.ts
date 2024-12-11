@@ -172,7 +172,9 @@ describe('simulateTransaction', () => {
                     value: {
                         accounts: null,
                         err: null,
+                        innerInstructions: null,
                         logs: expect.any(Array),
+                        replacementBlockhash: null,
                         returnData: null,
                         unitsConsumed: expect.any(BigInt),
                     },
@@ -215,7 +217,7 @@ describe('simulateTransaction', () => {
                 'context.__code',
                 SOLANA_ERROR__JSON_RPC__SERVER_ERROR_MIN_CONTEXT_SLOT_NOT_REACHED,
             ),
-            expect(resultPromise).rejects.toHaveProperty('context.contextSlot', expect.any(Number)),
+            expect(resultPromise).rejects.toHaveProperty('context.contextSlot', expect.any(BigInt)),
         ]);
     });
 
@@ -281,7 +283,9 @@ describe('simulateTransaction', () => {
             value: {
                 accounts: null,
                 err: null,
+                innerInstructions: null,
                 logs: expect.any(Array),
+                replacementBlockhash: null,
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },
@@ -319,7 +323,9 @@ describe('simulateTransaction', () => {
             value: {
                 accounts: null,
                 err: 'BlockhashNotFound',
+                innerInstructions: null,
                 logs: expect.any(Array),
+                replacementBlockhash: null,
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },
@@ -357,7 +363,12 @@ describe('simulateTransaction', () => {
             value: {
                 accounts: null,
                 err: null,
+                innerInstructions: null,
                 logs: expect.any(Array),
+                replacementBlockhash: {
+                    blockhash: expect.any(String),
+                    lastValidBlockHeight: expect.any(BigInt),
+                },
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },
@@ -429,10 +440,7 @@ describe('simulateTransaction', () => {
         expect.assertions(1);
         const [[secretKey, publicKeyBytes], { value: latestBlockhash }] = await Promise.all([
             (async () => {
-                const keyPair = (await crypto.subtle.generateKey('Ed25519', /* extractable */ false, [
-                    'sign',
-                    'verify',
-                ])) as CryptoKeyPair;
+                const keyPair = await crypto.subtle.generateKey('Ed25519', /* extractable */ false, ['sign', 'verify']);
                 return [keyPair.privateKey, new Uint8Array(await crypto.subtle.exportKey('raw', keyPair.publicKey))];
             })(),
             rpc.getLatestBlockhash({ commitment: 'processed' }).send(),
@@ -461,7 +469,9 @@ describe('simulateTransaction', () => {
             value: {
                 accounts: null,
                 err: 'AccountNotFound',
+                innerInstructions: null,
                 logs: expect.any(Array),
+                replacementBlockhash: null,
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },
@@ -509,7 +519,9 @@ describe('simulateTransaction', () => {
                     }),
                 ],
                 err: null,
+                innerInstructions: null,
                 logs: expect.any(Array),
+                replacementBlockhash: null,
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },
@@ -557,7 +569,9 @@ describe('simulateTransaction', () => {
                     }),
                 ],
                 err: null,
+                innerInstructions: null,
                 logs: expect.any(Array),
+                replacementBlockhash: null,
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },
@@ -622,7 +636,9 @@ describe('simulateTransaction', () => {
                     }),
                 ],
                 err: null,
+                innerInstructions: null,
                 logs: expect.any(Array),
+                replacementBlockhash: null,
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },
@@ -671,7 +687,9 @@ describe('simulateTransaction', () => {
                     }),
                 ],
                 err: null,
+                innerInstructions: null,
                 logs: expect.any(Array),
+                replacementBlockhash: null,
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },
@@ -718,7 +736,10 @@ describe('simulateTransaction', () => {
                     }),
                 ],
                 err: null,
+                innerInstructions: null,
+
                 logs: expect.any(Array),
+                replacementBlockhash: null,
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },
@@ -771,7 +792,9 @@ describe('simulateTransaction', () => {
                     }),
                 ],
                 err: null,
+                innerInstructions: null,
                 logs: expect.any(Array),
+                replacementBlockhash: null,
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },
@@ -810,7 +833,9 @@ describe('simulateTransaction', () => {
             value: {
                 accounts: null,
                 err: null,
+                innerInstructions: null,
                 logs: expect.any(Array),
+                replacementBlockhash: null,
                 returnData: null,
                 unitsConsumed: expect.any(BigInt),
             },

@@ -1,15 +1,7 @@
-import { getSolanaErrorFromJsonRpcError } from '@solana/errors';
-import {
-    Callable,
-    createRpcMessage,
-    Flatten,
-    OverloadImplementations,
-    RpcResponse,
-    UnionToIntersection,
-} from '@solana/rpc-spec-types';
+import { SOLANA_ERROR__RPC__API_PLAN_MISSING_FOR_RPC_METHOD, SolanaError } from '@solana/errors';
+import { Callable, Flatten, OverloadImplementations, UnionToIntersection } from '@solana/rpc-spec-types';
 
-import { RpcApi } from './rpc-api';
-import { PendingRpcRequest, RpcRequest, RpcSendOptions } from './rpc-request';
+import { RpcApi, RpcPlan } from './rpc-api';
 import { RpcTransport } from './rpc-transport';
 
 export type RpcConfig<TRpcMethods, TRpcTransport extends RpcTransport> = Readonly<{
@@ -20,6 +12,14 @@ export type RpcConfig<TRpcMethods, TRpcTransport extends RpcTransport> = Readonl
 export type Rpc<TRpcMethods> = {
     [TMethodName in keyof TRpcMethods]: PendingRpcRequestBuilder<OverloadImplementations<TRpcMethods, TMethodName>>;
 };
+
+export type PendingRpcRequest<TResponse> = {
+    send(options?: RpcSendOptions): Promise<TResponse>;
+};
+
+export type RpcSendOptions = Readonly<{
+    abortSignal?: AbortSignal;
+}>;
 
 type PendingRpcRequestBuilder<TMethodImplementations> = UnionToIntersection<
     Flatten<{
@@ -36,7 +36,7 @@ type PendingRpcRequestReturnTypeMapper<TMethodImplementation> =
 export function createRpc<TRpcMethods, TRpcTransport extends RpcTransport>(
     rpcConfig: RpcConfig<TRpcMethods, TRpcTransport>,
 ): Rpc<TRpcMethods> {
-    return makeProxy(rpcConfig) as Rpc<TRpcMethods>;
+    return makeProxy(rpcConfig);
 }
 
 function makeProxy<TRpcMethods, TRpcTransport extends RpcTransport>(
@@ -52,34 +52,27 @@ function makeProxy<TRpcMethods, TRpcTransport extends RpcTransport>(
         get(target, p, receiver) {
             return function (...rawParams: unknown[]) {
                 const methodName = p.toString();
-                const createRpcRequest = Reflect.get(target, methodName, receiver);
-                const newRequest = createRpcRequest
-                    ? createRpcRequest(...rawParams)
-                    : { methodName, params: rawParams };
-                return createPendingRpcRequest(rpcConfig, newRequest);
+                const getApiPlan = Reflect.get(target, methodName, receiver);
+                if (!getApiPlan) {
+                    throw new SolanaError(SOLANA_ERROR__RPC__API_PLAN_MISSING_FOR_RPC_METHOD, {
+                        method: methodName,
+                        params: rawParams,
+                    });
+                }
+                const apiPlan = getApiPlan(...rawParams);
+                return createPendingRpcRequest(rpcConfig, apiPlan);
             };
         },
     }) as Rpc<TRpcMethods>;
 }
 
 function createPendingRpcRequest<TRpcMethods, TRpcTransport extends RpcTransport, TResponse>(
-    rpcConfig: RpcConfig<TRpcMethods, TRpcTransport>,
-    pendingRequest: RpcRequest<TResponse>,
+    { transport }: RpcConfig<TRpcMethods, TRpcTransport>,
+    plan: RpcPlan<TResponse>,
 ): PendingRpcRequest<TResponse> {
     return {
         async send(options?: RpcSendOptions): Promise<TResponse> {
-            const { methodName, params, responseTransformer } = pendingRequest;
-            const payload = createRpcMessage(methodName, params);
-            const response = await rpcConfig.transport<RpcResponse<unknown>>({
-                payload,
-                signal: options?.abortSignal,
-            });
-            if ('error' in response) {
-                throw getSolanaErrorFromJsonRpcError(response.error);
-            }
-            return (
-                responseTransformer ? responseTransformer(response.result, methodName) : response.result
-            ) as TResponse;
+            return await plan.execute({ signal: options?.abortSignal, transport });
         },
     };
 }

@@ -1,10 +1,9 @@
 import type { Address } from '@solana/addresses';
-import type { RpcApiMethods } from '@solana/rpc-spec';
 import type { Commitment, SolanaRpcResponse, TokenAmount } from '@solana/rpc-types';
 
-type GetTokenSupplyApiResponse = SolanaRpcResponse<TokenAmount>;
+type GetTokenSupplyApiResponse = TokenAmount;
 
-export interface GetTokenSupplyApi extends RpcApiMethods {
+export type GetTokenSupplyApi = {
     /**
      * Returns the total supply of an SPL Token mint
      */
@@ -14,5 +13,5 @@ export interface GetTokenSupplyApi extends RpcApiMethods {
         config?: Readonly<{
             commitment?: Commitment;
         }>,
-    ): GetTokenSupplyApiResponse;
-}
+    ): SolanaRpcResponse<GetTokenSupplyApiResponse>;
+};

@@ -1,20 +1,17 @@
 [![npm][npm-image]][npm-url]
 [![npm-downloads][npm-downloads-image]][npm-url]
-[![semantic-release][semantic-release-image]][semantic-release-url]
 <br />
 [![code-style-prettier][code-style-prettier-image]][code-style-prettier-url]
 
 [code-style-prettier-image]: https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square
 [code-style-prettier-url]: https://github.com/prettier/prettier
-[npm-downloads-image]: https://img.shields.io/npm/dm/@solana/keys/experimental.svg?style=flat
-[npm-image]: https://img.shields.io/npm/v/@solana/keys/experimental.svg?style=flat
-[npm-url]: https://www.npmjs.com/package/@solana/keys/v/experimental
-[semantic-release-image]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg
-[semantic-release-url]: https://github.com/semantic-release/semantic-release
+[npm-downloads-image]: https://img.shields.io/npm/dm/@solana/keys/next.svg?style=flat
+[npm-image]: https://img.shields.io/npm/v/@solana/keys/next.svg?style=flat
+[npm-url]: https://www.npmjs.com/package/@solana/keys/v/next
 
 # @solana/keys
 
-This package contains utilities for validating, generating, and manipulating addresses and key material. It can be used standalone, but it is also exported as part of the Solana JavaScript SDK [`@solana/web3.js@experimental`](https://github.com/solana-labs/solana-web3.js/tree/master/packages/library).
+This package contains utilities for validating, generating, and manipulating addresses and key material. It can be used standalone, but it is also exported as part of the Solana JavaScript SDK [`@solana/web3.js@next`](https://github.com/solana-labs/solana-web3.js/tree/master/packages/library).
 
 ## Types
 
@@ -79,6 +76,52 @@ const keypairBytes = new Uint8Array(JSON.parse(keypairFile.toString()));
 
 // Create a CryptoKeyPair from the bytes.
 const { privateKey, publicKey } = await createKeyPairFromBytes(keypairBytes);
+```
+
+### `createKeyPairFromPrivateKeyBytes()`
+
+Given a private key represented as a 32-bytes `Uint8Array`, creates an Ed25519 public/private key pair for use with other methods in this package that accept `CryptoKey` objects.
+
+```ts
+import { createKeyPairFromPrivateKeyBytes } from '@solana/keys';
+
+const { privateKey, publicKey } = await createKeyPairFromPrivateKeyBytes(new Uint8Array([...]));
+```
+
+This can be useful when you have a private key but not the corresponding public key or when you need to derive key pairs from seeds. For instance, the following code snippet derives a key pair from the hash of a message.
+
+```ts
+import { getUtf8Encoder } from '@solana/codecs-strings';
+import { createKeyPairFromPrivateKeyBytes } from '@solana/keys';
+
+const message = getUtf8Encoder().encode('Hello, World!');
+const seed = new Uint8Array(await crypto.subtle.digest('SHA-256', message));
+
+const derivedKeypair = await createKeyPairFromPrivateKeyBytes(seed);
+```
+
+### `createPrivateKeyFromBytes()`
+
+Given a private key represented as a 32-bytes `Uint8Array`, creates an Ed25519 private key for use with other methods in this package that accept `CryptoKey` objects.
+
+```ts
+import { createPrivateKeyFromBytes } from '@solana/keys';
+
+const privateKey = await createPrivateKeyFromBytes(new Uint8Array([...]));
+const extractablePrivateKey = await createPrivateKeyFromBytes(new Uint8Array([...]), true);
+```
+
+### `getPublicKeyFromPrivateKey()`
+
+Given an extractable `CryptoKey` private key, gets the corresponding public key as a `CryptoKey`.
+
+```ts
+import { createPrivateKeyFromBytes, getPublicKeyFromPrivateKey } from '@solana/keys';
+
+const privateKey = await createPrivateKeyFromBytes(new Uint8Array([...]), true);
+
+const publicKey = await getPublicKeyFromPrivateKey(privateKey);
+const extractablePublicKey = await getPublicKeyFromPrivateKey(privateKey, true);
 ```
 
 ### `isSignature()`

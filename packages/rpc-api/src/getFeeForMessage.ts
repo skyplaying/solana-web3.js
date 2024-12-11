@@ -1,11 +1,10 @@
-import type { RpcApiMethods } from '@solana/rpc-spec';
-import type { Commitment, Slot, SolanaRpcResponse, U64UnsafeBeyond2Pow53Minus1 } from '@solana/rpc-types';
+import type { Commitment, Lamports, Slot, SolanaRpcResponse } from '@solana/rpc-types';
 import type { TransactionMessageBytesBase64 } from '@solana/transactions';
 
 /** Fee corresponding to the message at the specified blockhash */
-type GetFeeForMessageApiResponse = SolanaRpcResponse<U64UnsafeBeyond2Pow53Minus1 | null>;
+type GetFeeForMessageApiResponse = Lamports | null;
 
-export interface GetFeeForMessageApi extends RpcApiMethods {
+export type GetFeeForMessageApi = {
     /**
      * Returns the fee the network will charge for a particular Message
      */
@@ -15,5 +14,5 @@ export interface GetFeeForMessageApi extends RpcApiMethods {
             commitment?: Commitment;
             minContextSlot?: Slot;
         }>,
-    ): GetFeeForMessageApiResponse;
-}
+    ): SolanaRpcResponse<GetFeeForMessageApiResponse>;
+};

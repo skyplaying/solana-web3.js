@@ -1,11 +1,20 @@
+import type { RpcRequest } from './rpc-request';
+
+export type RpcResponse<TResponse = unknown> = TResponse;
+
+export type RpcResponseTransformer<TResponse = unknown> = {
+    (response: RpcResponse, request: RpcRequest): RpcResponse<TResponse>;
+};
+
 interface IHasIdentifier {
-    readonly id: number;
+    readonly id: string;
 }
 
-type RpcErrorResponse = Readonly<{
+type RpcErrorResponsePayload = Readonly<{
     code: number;
     data?: unknown;
     message: string;
 }>;
 
-export type RpcResponse<TResponse> = IHasIdentifier & Readonly<{ error: RpcErrorResponse } | { result: TResponse }>;
+export type RpcResponseData<TResponse> = IHasIdentifier &
+    Readonly<{ error: RpcErrorResponsePayload } | { result: TResponse }>;

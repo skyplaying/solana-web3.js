@@ -19,8 +19,11 @@ describe('createHttpTransport', () => {
         });
     });
     describe('when the endpoint returns a non-200 status code', () => {
+        let expectedHeaders: Headers;
         beforeEach(() => {
+            expectedHeaders = new Headers([['Sekrit-Response-Header', 'doNotLog']]);
             fetchSpy.mockResolvedValue({
+                headers: expectedHeaders,
                 ok: false,
                 status: 404,
                 statusText: 'We looked everywhere',
@@ -31,10 +34,45 @@ describe('createHttpTransport', () => {
             const requestPromise = makeHttpRequest({ payload: 123 });
             await expect(requestPromise).rejects.toThrow(
                 new SolanaError(SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR, {
+                    headers: expectedHeaders,
                     message: 'We looked everywhere',
                     statusCode: 404,
                 }),
             );
+        });
+        it('exposes the response headers on the error context', async () => {
+            expect.assertions(2);
+            let thrownError!: SolanaError<typeof SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR>;
+            try {
+                await makeHttpRequest({ payload: 123 });
+            } catch (e) {
+                thrownError = e as SolanaError<typeof SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR>;
+            }
+            expect(thrownError).toBeDefined();
+            expect(thrownError.context.headers).toBe(expectedHeaders);
+        });
+        it('does not leak the response header values through the error message', async () => {
+            expect.assertions(2);
+            let thrownError!: SolanaError<typeof SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR>;
+            try {
+                await makeHttpRequest({ payload: 123 });
+            } catch (e) {
+                thrownError = e as SolanaError<typeof SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR>;
+            }
+            expect(thrownError).toBeDefined();
+            expect(thrownError.message).not.toMatch(/doNotLog/);
+        });
+        it('the `Headers` on the error context do not leak the header values when stringified', async () => {
+            expect.assertions(2);
+            let thrownError!: SolanaError<typeof SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR>;
+            try {
+                await makeHttpRequest({ payload: 123 });
+            } catch (e) {
+                thrownError = e as SolanaError<typeof SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR>;
+            }
+            expect(thrownError).toBeDefined();
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            expect(`${thrownError.context.headers}`).not.toMatch(/doNotLog/);
         });
     });
     describe('when the transport fatals', () => {
@@ -54,11 +92,11 @@ describe('createHttpTransport', () => {
             });
         });
         it('calls fetch with the specified URL', () => {
-            makeHttpRequest({ payload: 123 });
+            makeHttpRequest({ payload: 123 }).catch(() => {});
             expect(fetchSpy).toHaveBeenCalledWith('http://localhost', expect.anything());
         });
         it('sets the `body` to a stringfied version of the payload', () => {
-            makeHttpRequest({ payload: { ok: true } });
+            makeHttpRequest({ payload: { ok: true } }).catch(() => {});
             expect(fetchSpy).toHaveBeenCalledWith(
                 expect.anything(),
                 expect.objectContaining({
@@ -67,7 +105,7 @@ describe('createHttpTransport', () => {
             );
         });
         it('sets the accept header to `application/json`', () => {
-            makeHttpRequest({ payload: 123 });
+            makeHttpRequest({ payload: 123 }).catch(() => {});
             expect(fetchSpy).toHaveBeenCalledWith(
                 expect.anything(),
                 expect.objectContaining({
@@ -78,7 +116,7 @@ describe('createHttpTransport', () => {
             );
         });
         it('sets the content type header to `application/json; charset=utf-8`', () => {
-            makeHttpRequest({ payload: 123 });
+            makeHttpRequest({ payload: 123 }).catch(() => {});
             expect(fetchSpy).toHaveBeenCalledWith(
                 expect.anything(),
                 expect.objectContaining({
@@ -99,7 +137,7 @@ describe('createHttpTransport', () => {
                     ' ' +
                     // https://tinyurl.com/bdemuf3r
                     '\u{1F469}\u{1F3FB}\u200D\u2764\uFE0F\u200D\u{1F469}\u{1F3FF}',
-            });
+            }).catch(() => {});
             expect(fetchSpy).toHaveBeenCalledWith(
                 expect.anything(),
                 expect.objectContaining({
@@ -110,7 +148,7 @@ describe('createHttpTransport', () => {
             );
         });
         it('sets the `method` to `POST`', () => {
-            makeHttpRequest({ payload: 123 });
+            makeHttpRequest({ payload: 123 }).catch(() => {});
             expect(fetchSpy).toHaveBeenCalledWith(
                 expect.anything(),
                 expect.objectContaining({

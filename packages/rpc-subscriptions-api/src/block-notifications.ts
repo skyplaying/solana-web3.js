@@ -1,4 +1,3 @@
-import type { RpcSubscriptionsApiMethods } from '@solana/rpc-subscriptions-spec';
 import type {
     Base58EncodedBytes,
     Blockhash,
@@ -11,7 +10,6 @@ import type {
     TransactionForFullBase64,
     TransactionForFullJson,
     TransactionForFullJsonParsed,
-    U64UnsafeBeyond2Pow53Minus1,
     UnixTimestamp,
 } from '@solana/rpc-types';
 import type { TransactionVersion } from '@solana/transaction-messages';
@@ -31,8 +29,8 @@ type BlockNotificationsNotificationBase = Readonly<{
 
 type BlockNotificationsNotificationBlock = Readonly<{
     /** The number of blocks beneath this block */
-    blockHeight: U64UnsafeBeyond2Pow53Minus1;
-    /** The number of blocks beneath this block */
+    blockHeight: bigint;
+    /** Estimated production time, as Unix timestamp */
     blockTime: UnixTimestamp;
     /** the blockhash of this block */
     blockhash: Blockhash;
@@ -80,7 +78,7 @@ type BlockNotificationsEncoding = 'base58' | 'base64' | 'json' | 'jsonParsed';
 // - These rules apply to both "accounts" and "full" transaction details.
 type BlockNotificationsMaxSupportedTransactionVersion = Exclude<TransactionVersion, 'legacy'>;
 
-export interface BlockNotificationsApi extends RpcSubscriptionsApiMethods {
+export type BlockNotificationsApi = {
     /**
      * Subscribe to receive notification anytime a new block is Confirmed or Finalized.
      *
@@ -555,4 +553,4 @@ export interface BlockNotificationsApi extends RpcSubscriptionsApiMethods {
                     | null;
             }>
     >;
-}
+};

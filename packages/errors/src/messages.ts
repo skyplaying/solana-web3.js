@@ -102,9 +102,10 @@ import {
     SOLANA_ERROR__INVALID_BLOCKHASH_BYTE_LENGTH,
     SOLANA_ERROR__INVALID_NONCE,
     SOLANA_ERROR__INVARIANT_VIOLATION__CACHED_ABORTABLE_ITERABLE_CACHE_ENTRY_MISSING,
+    SOLANA_ERROR__INVARIANT_VIOLATION__DATA_PUBLISHER_CHANNEL_UNIMPLEMENTED,
+    SOLANA_ERROR__INVARIANT_VIOLATION__SUBSCRIPTION_ITERATOR_MUST_NOT_POLL_BEFORE_RESOLVING_EXISTING_MESSAGE_PROMISE,
+    SOLANA_ERROR__INVARIANT_VIOLATION__SUBSCRIPTION_ITERATOR_STATE_MISSING,
     SOLANA_ERROR__INVARIANT_VIOLATION__SWITCH_MUST_BE_EXHAUSTIVE,
-    SOLANA_ERROR__INVARIANT_VIOLATION__WEBSOCKET_MESSAGE_ITERATOR_MUST_NOT_POLL_BEFORE_RESOLVING_EXISTING_MESSAGE_PROMISE,
-    SOLANA_ERROR__INVARIANT_VIOLATION__WEBSOCKET_MESSAGE_ITERATOR_STATE_MISSING,
     SOLANA_ERROR__JSON_RPC__INTERNAL_ERROR,
     SOLANA_ERROR__JSON_RPC__INVALID_PARAMS,
     SOLANA_ERROR__JSON_RPC__INVALID_REQUEST,
@@ -135,14 +136,15 @@ import {
     SOLANA_ERROR__MALFORMED_BIGINT_STRING,
     SOLANA_ERROR__MALFORMED_NUMBER_STRING,
     SOLANA_ERROR__NONCE_ACCOUNT_NOT_FOUND,
+    SOLANA_ERROR__RPC__API_PLAN_MISSING_FOR_RPC_METHOD,
     SOLANA_ERROR__RPC__INTEGER_OVERFLOW,
     SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR,
     SOLANA_ERROR__RPC__TRANSPORT_HTTP_HEADER_FORBIDDEN,
-    SOLANA_ERROR__RPC_SUBSCRIPTIONS__CANNOT_CREATE_SUBSCRIPTION_REQUEST,
+    SOLANA_ERROR__RPC_SUBSCRIPTIONS__CANNOT_CREATE_SUBSCRIPTION_PLAN,
+    SOLANA_ERROR__RPC_SUBSCRIPTIONS__CHANNEL_CLOSED_BEFORE_MESSAGE_BUFFERED,
+    SOLANA_ERROR__RPC_SUBSCRIPTIONS__CHANNEL_CONNECTION_CLOSED,
+    SOLANA_ERROR__RPC_SUBSCRIPTIONS__CHANNEL_FAILED_TO_CONNECT,
     SOLANA_ERROR__RPC_SUBSCRIPTIONS__EXPECTED_SERVER_SUBSCRIPTION_ID,
-    SOLANA_ERROR__RPC_SUBSCRIPTIONS__TRANSPORT_CLOSED_BEFORE_MESSAGE_BUFFERED,
-    SOLANA_ERROR__RPC_SUBSCRIPTIONS__TRANSPORT_CONNECTION_CLOSED,
-    SOLANA_ERROR__RPC_SUBSCRIPTIONS__TRANSPORT_FAILED_TO_CONNECT,
     SOLANA_ERROR__SIGNER__ADDRESS_CANNOT_HAVE_MULTIPLE_SIGNERS,
     SOLANA_ERROR__SIGNER__EXPECTED_KEY_PAIR_SIGNER,
     SOLANA_ERROR__SIGNER__EXPECTED_MESSAGE_MODIFYING_SIGNER,
@@ -154,6 +156,8 @@ import {
     SOLANA_ERROR__SIGNER__EXPECTED_TRANSACTION_SIGNER,
     SOLANA_ERROR__SIGNER__TRANSACTION_CANNOT_HAVE_MULTIPLE_SENDING_SIGNERS,
     SOLANA_ERROR__SIGNER__TRANSACTION_SENDING_SIGNER_MISSING,
+    SOLANA_ERROR__SIGNER__WALLET_MULTISIGN_UNIMPLEMENTED,
+    SOLANA_ERROR__SUBTLE_CRYPTO__CANNOT_EXPORT_NON_EXTRACTABLE_KEY,
     SOLANA_ERROR__SUBTLE_CRYPTO__DIGEST_UNIMPLEMENTED,
     SOLANA_ERROR__SUBTLE_CRYPTO__DISALLOWED_IN_INSECURE_CONTEXT,
     SOLANA_ERROR__SUBTLE_CRYPTO__ED25519_ALGORITHM_UNIMPLEMENTED,
@@ -172,6 +176,7 @@ import {
     SOLANA_ERROR__TRANSACTION__FAILED_TO_DECOMPILE_FEE_PAYER_MISSING,
     SOLANA_ERROR__TRANSACTION__FAILED_TO_DECOMPILE_INSTRUCTION_PROGRAM_ADDRESS_NOT_FOUND,
     SOLANA_ERROR__TRANSACTION__FAILED_TO_ESTIMATE_COMPUTE_LIMIT,
+    SOLANA_ERROR__TRANSACTION__FAILED_WHEN_SIMULATING_TO_ESTIMATE_COMPUTE_LIMIT,
     SOLANA_ERROR__TRANSACTION__FEE_PAYER_MISSING,
     SOLANA_ERROR__TRANSACTION__FEE_PAYER_SIGNATURE_MISSING,
     SOLANA_ERROR__TRANSACTION__INVALID_NONCE_TRANSACTION_FIRST_INSTRUCTION_MUST_BE_ADVANCE_NONCE,
@@ -389,17 +394,20 @@ export const SolanaErrorMessages: Readonly<{
         'Invariant violation: Found no abortable iterable cache entry for key `$cacheKey`. It ' +
         'should be impossible to hit this error; please file an issue at ' +
         'https://sola.na/web3invariant',
+    [SOLANA_ERROR__INVARIANT_VIOLATION__DATA_PUBLISHER_CHANNEL_UNIMPLEMENTED]:
+        'Invariant violation: This data publisher does not publish to the channel named ' +
+        '`$channelName`. Supported channels include $supportedChannelNames.',
+    [SOLANA_ERROR__INVARIANT_VIOLATION__SUBSCRIPTION_ITERATOR_MUST_NOT_POLL_BEFORE_RESOLVING_EXISTING_MESSAGE_PROMISE]:
+        'Invariant violation: WebSocket message iterator state is corrupt; iterated without first ' +
+        'resolving existing message promise. It should be impossible to hit this error; please ' +
+        'file an issue at https://sola.na/web3invariant',
+    [SOLANA_ERROR__INVARIANT_VIOLATION__SUBSCRIPTION_ITERATOR_STATE_MISSING]:
+        'Invariant violation: WebSocket message iterator is missing state storage. It should be ' +
+        'impossible to hit this error; please file an issue at https://sola.na/web3invariant',
     [SOLANA_ERROR__INVARIANT_VIOLATION__SWITCH_MUST_BE_EXHAUSTIVE]:
         'Invariant violation: Switch statement non-exhaustive. Received unexpected value ' +
         '`$unexpectedValue`. It should be impossible to hit this error; please file an issue at ' +
         'https://sola.na/web3invariant',
-    [SOLANA_ERROR__INVARIANT_VIOLATION__WEBSOCKET_MESSAGE_ITERATOR_MUST_NOT_POLL_BEFORE_RESOLVING_EXISTING_MESSAGE_PROMISE]:
-        'Invariant violation: WebSocket message iterator state is corrupt; iterated without first ' +
-        'resolving existing message promise. It should be impossible to hit this error; please ' +
-        'file an issue at https://sola.na/web3invariant',
-    [SOLANA_ERROR__INVARIANT_VIOLATION__WEBSOCKET_MESSAGE_ITERATOR_STATE_MISSING]:
-        'Invariant violation: WebSocket message iterator is missing state storage. It should be ' +
-        'impossible to hit this error; please file an issue at https://sola.na/web3invariant',
     [SOLANA_ERROR__JSON_RPC__INTERNAL_ERROR]: 'JSON-RPC error: Internal JSON-RPC error ($__serverMessage)',
     [SOLANA_ERROR__JSON_RPC__INVALID_PARAMS]: 'JSON-RPC error: Invalid method parameter(s) ($__serverMessage)',
     [SOLANA_ERROR__JSON_RPC__INVALID_REQUEST]:
@@ -439,16 +447,16 @@ export const SolanaErrorMessages: Readonly<{
     [SOLANA_ERROR__MALFORMED_BIGINT_STRING]: '`$value` cannot be parsed as a `BigInt`',
     [SOLANA_ERROR__MALFORMED_NUMBER_STRING]: '`$value` cannot be parsed as a `Number`',
     [SOLANA_ERROR__NONCE_ACCOUNT_NOT_FOUND]: 'No nonce account could be found at address `$nonceAccountAddress`',
-    [SOLANA_ERROR__RPC_SUBSCRIPTIONS__CANNOT_CREATE_SUBSCRIPTION_REQUEST]:
-        "Either the notification name must end in 'Notifications' or the API must supply a " +
-        "subscription creator function for the notification '$notificationName' to map between " +
-        'the notification name and the subscribe/unsubscribe method names.',
+    [SOLANA_ERROR__RPC_SUBSCRIPTIONS__CANNOT_CREATE_SUBSCRIPTION_PLAN]:
+        "The notification name must end in 'Notifications' and the API must supply a " +
+        "subscription plan creator function for the notification '$notificationName'.",
+    [SOLANA_ERROR__RPC_SUBSCRIPTIONS__CHANNEL_CLOSED_BEFORE_MESSAGE_BUFFERED]:
+        'WebSocket was closed before payload could be added to the send buffer',
+    [SOLANA_ERROR__RPC_SUBSCRIPTIONS__CHANNEL_CONNECTION_CLOSED]: 'WebSocket connection closed',
+    [SOLANA_ERROR__RPC_SUBSCRIPTIONS__CHANNEL_FAILED_TO_CONNECT]: 'WebSocket failed to connect',
     [SOLANA_ERROR__RPC_SUBSCRIPTIONS__EXPECTED_SERVER_SUBSCRIPTION_ID]:
         'Failed to obtain a subscription id from the server',
-    [SOLANA_ERROR__RPC_SUBSCRIPTIONS__TRANSPORT_CLOSED_BEFORE_MESSAGE_BUFFERED]:
-        'WebSocket was closed before payload could be added to the send buffer',
-    [SOLANA_ERROR__RPC_SUBSCRIPTIONS__TRANSPORT_CONNECTION_CLOSED]: 'WebSocket connection closed',
-    [SOLANA_ERROR__RPC_SUBSCRIPTIONS__TRANSPORT_FAILED_TO_CONNECT]: 'WebSocket failed to connect',
+    [SOLANA_ERROR__RPC__API_PLAN_MISSING_FOR_RPC_METHOD]: 'Could not find an API plan for RPC method: `$method`',
     [SOLANA_ERROR__RPC__INTEGER_OVERFLOW]:
         'The $argumentLabel argument to the `$methodName` RPC method$optionalPathLabel was ' +
         '`$value`. This number is unsafe for use with the Solana JSON-RPC because it exceeds ' +
@@ -481,13 +489,16 @@ export const SolanaErrorMessages: Readonly<{
     [SOLANA_ERROR__SIGNER__TRANSACTION_SENDING_SIGNER_MISSING]:
         'No `TransactionSendingSigner` was identified. Please provide a valid ' +
         '`ITransactionWithSingleSendingSigner` transaction.',
+    [SOLANA_ERROR__SIGNER__WALLET_MULTISIGN_UNIMPLEMENTED]:
+        'Wallet account signers do not support signing multiple messages/transactions in a single operation',
+    [SOLANA_ERROR__SUBTLE_CRYPTO__CANNOT_EXPORT_NON_EXTRACTABLE_KEY]: 'Cannot export a non-extractable key.',
     [SOLANA_ERROR__SUBTLE_CRYPTO__DIGEST_UNIMPLEMENTED]: 'No digest implementation could be found.',
     [SOLANA_ERROR__SUBTLE_CRYPTO__DISALLOWED_IN_INSECURE_CONTEXT]:
         'Cryptographic operations are only allowed in secure browser contexts. Read more ' +
         'here: https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts.',
     [SOLANA_ERROR__SUBTLE_CRYPTO__ED25519_ALGORITHM_UNIMPLEMENTED]:
-        'This runtime does not support the generation of Ed25519 key pairs.\n\nInstall and ' +
-        'import `@solana/webcrypto-ed25519-polyfill` before generating keys in ' +
+        'This runtime does not support the generation of Ed25519 key pairs.\n\nInstall ' +
+        '@solana/webcrypto-ed25519-polyfill and call its `install` function before generating keys in ' +
         'environments that do not support Ed25519.\n\nFor a list of runtimes that ' +
         'currently support Ed25519 operations, visit ' +
         'https://github.com/WICG/webcrypto-secure-curves/issues/20.',
@@ -496,7 +507,8 @@ export const SolanaErrorMessages: Readonly<{
     [SOLANA_ERROR__SUBTLE_CRYPTO__GENERATE_FUNCTION_UNIMPLEMENTED]: 'No key generation implementation could be found.',
     [SOLANA_ERROR__SUBTLE_CRYPTO__SIGN_FUNCTION_UNIMPLEMENTED]: 'No signing implementation could be found.',
     [SOLANA_ERROR__SUBTLE_CRYPTO__VERIFY_FUNCTION_UNIMPLEMENTED]: 'No key export implementation could be found.',
-    [SOLANA_ERROR__TIMESTAMP_OUT_OF_RANGE]: 'Timestamp value must be in the range [-8.64e15, 8.64e15]. `$value` given',
+    [SOLANA_ERROR__TIMESTAMP_OUT_OF_RANGE]:
+        'Timestamp value must be in the range [-(2n ** 63n), (2n ** 63n) - 1]. `$value` given',
     [SOLANA_ERROR__TRANSACTION_ERROR__ACCOUNT_BORROW_OUTSTANDING]:
         'Transaction processing left an account with an outstanding borrowed reference',
     [SOLANA_ERROR__TRANSACTION_ERROR__ACCOUNT_IN_USE]: 'Account in use',
@@ -575,6 +587,11 @@ export const SolanaErrorMessages: Readonly<{
         'Failed to estimate the compute unit consumption for this transaction message. This is ' +
         'likely because simulating the transaction failed. Inspect the `cause` property of this ' +
         'error to learn more',
+    [SOLANA_ERROR__TRANSACTION__FAILED_WHEN_SIMULATING_TO_ESTIMATE_COMPUTE_LIMIT]:
+        'Transaction failed when it was simulated in order to estimate the compute unit consumption. ' +
+        'The compute unit estimate provided is for a transaction that failed when simulated and may not ' +
+        'be representative of the compute units this transaction would consume if successful. Inspect the ' +
+        '`cause` property of this error to learn more',
     [SOLANA_ERROR__TRANSACTION__FEE_PAYER_MISSING]: 'Transaction is missing a fee payer.',
     [SOLANA_ERROR__TRANSACTION__FEE_PAYER_SIGNATURE_MISSING]:
         "Could not determine this transaction's signature. Make sure that the transaction has " +

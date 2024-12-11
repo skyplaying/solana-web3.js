@@ -7,7 +7,7 @@ import {
     Rpc,
 } from '@solana/rpc';
 
-import { createRpcGraphQL, RpcGraphQL } from '../index';
+import { createSolanaRpcGraphQL, RpcGraphQL } from '../index';
 import { createLocalhostSolanaRpc } from './__setup__';
 
 type GraphQLCompliantRpc = Rpc<
@@ -19,7 +19,7 @@ describe('account', () => {
     let rpcGraphQL: RpcGraphQL;
     beforeEach(() => {
         rpc = createLocalhostSolanaRpc();
-        rpcGraphQL = createRpcGraphQL(rpc);
+        rpcGraphQL = createSolanaRpcGraphQL(rpc);
     });
 
     describe('basic queries', () => {
@@ -990,47 +990,6 @@ describe('account', () => {
                             slotsPerEpoch: expect.any(BigInt),
                             space: expect.any(BigInt),
                             warmup: expect.any(Boolean),
-                        },
-                    },
-                });
-            });
-            it('can get the fees sysvar', async () => {
-                expect.assertions(1);
-                const variableValues = {
-                    address: 'SysvarFees111111111111111111111111111111111',
-                };
-                const source = /* GraphQL */ `
-                    query testQuery($address: Address!) {
-                        account(address: $address) {
-                            address
-                            lamports
-                            ownerProgram {
-                                address
-                            }
-                            rentEpoch
-                            space
-                            ... on SysvarFeesAccount {
-                                feeCalculator {
-                                    lamportsPerSignature
-                                }
-                            }
-                        }
-                    }
-                `;
-                const result = await rpcGraphQL.query(source, variableValues);
-                expect(result).toMatchObject({
-                    data: {
-                        account: {
-                            address: 'SysvarFees111111111111111111111111111111111',
-                            feeCalculator: {
-                                lamportsPerSignature: expect.any(BigInt),
-                            },
-                            lamports: expect.any(BigInt),
-                            ownerProgram: {
-                                address: 'Sysvar1111111111111111111111111111111111111',
-                            },
-                            rentEpoch: expect.any(BigInt),
-                            space: expect.any(BigInt),
                         },
                     },
                 });

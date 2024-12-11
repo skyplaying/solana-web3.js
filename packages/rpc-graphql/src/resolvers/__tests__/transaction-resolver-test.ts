@@ -7,7 +7,7 @@ import type {
     Rpc,
 } from '@solana/rpc';
 
-import { createRpcGraphQL, RpcGraphQL } from '../../index';
+import { createSolanaRpcGraphQL, RpcGraphQL } from '../../index';
 
 const FOREVER_PROMISE = new Promise(() => {
     /* never resolve */
@@ -27,7 +27,7 @@ describe('transaction resolver', () => {
             getProgramAccounts: jest.fn().mockReturnValue({ send: jest.fn().mockReturnValue(FOREVER_PROMISE) }),
             getTransaction: jest.fn().mockReturnValue({ send: jest.fn().mockReturnValue(FOREVER_PROMISE) }),
         };
-        rpcGraphQL = createRpcGraphQL(rpc);
+        rpcGraphQL = createSolanaRpcGraphQL(rpc);
     });
     describe('fragment spreads', () => {
         it('will resolve fields from fragment spreads', async () => {
@@ -42,7 +42,7 @@ describe('transaction resolver', () => {
                     blockTime
                 }
             `;
-            rpcGraphQL.query(source, { signature });
+            rpcGraphQL.query(source, { signature }).catch(() => {});
             await jest.runAllTimersAsync();
             expect(rpc.getTransaction).toHaveBeenCalledTimes(1);
             expect(rpc.getTransaction).toHaveBeenLastCalledWith(signature, {
@@ -66,7 +66,7 @@ describe('transaction resolver', () => {
                     data(encoding: BASE_64)
                 }
             `;
-            rpcGraphQL.query(source, { signature });
+            rpcGraphQL.query(source, { signature }).catch(() => {});
             await jest.runAllTimersAsync();
             expect(rpc.getTransaction).toHaveBeenCalledTimes(1);
             expect(rpc.getTransaction).toHaveBeenLastCalledWith(signature, {
@@ -92,7 +92,7 @@ describe('transaction resolver', () => {
                     }
                 }
             `;
-            rpcGraphQL.query(source, { signature });
+            rpcGraphQL.query(source, { signature }).catch(() => {});
             await jest.runAllTimersAsync();
             expect(rpc.getTransaction).toHaveBeenCalledTimes(1);
             expect(rpc.getTransaction).toHaveBeenLastCalledWith(signature, {
@@ -119,7 +119,7 @@ describe('transaction resolver', () => {
                     }
                 }
             `;
-            rpcGraphQL.query(source, { signature });
+            rpcGraphQL.query(source, { signature }).catch(() => {});
             await jest.runAllTimersAsync();
             expect(rpc.getTransaction).toHaveBeenCalledTimes(2);
             expect(rpc.getTransaction).toHaveBeenCalledWith(signature, {
@@ -143,7 +143,7 @@ describe('transaction resolver', () => {
                     transactionData: data(encoding: BASE_58)
                 }
             `;
-            rpcGraphQL.query(source, { signature });
+            rpcGraphQL.query(source, { signature }).catch(() => {});
             await jest.runAllTimersAsync();
             expect(rpc.getTransaction).toHaveBeenCalledTimes(1);
             expect(rpc.getTransaction).toHaveBeenLastCalledWith(signature, {

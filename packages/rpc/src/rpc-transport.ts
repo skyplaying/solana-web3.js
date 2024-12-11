@@ -1,5 +1,5 @@
 import { pipe } from '@solana/functional';
-import { createHttpTransport } from '@solana/rpc-transport-http';
+import { createHttpTransport, createHttpTransportForSolanaRpc } from '@solana/rpc-transport-http';
 import type { ClusterUrl } from '@solana/rpc-types';
 
 import { RpcTransportFromClusterUrl } from './rpc-clusters';
@@ -7,7 +7,7 @@ import { getRpcTransportWithRequestCoalescing } from './rpc-request-coalescer';
 import { getSolanaRpcPayloadDeduplicationKey } from './rpc-request-deduplication';
 
 type RpcTransportConfig = Parameters<typeof createHttpTransport>[0];
-export interface DefaultRpcTransportConfig<TClusterUrl extends ClusterUrl> extends RpcTransportConfig {
+interface DefaultRpcTransportConfig<TClusterUrl extends ClusterUrl> extends RpcTransportConfig {
     url: TClusterUrl;
 }
 
@@ -28,13 +28,20 @@ export function createDefaultRpcTransport<TClusterUrl extends ClusterUrl>(
     config: DefaultRpcTransportConfig<TClusterUrl>,
 ): RpcTransportFromClusterUrl<TClusterUrl> {
     return pipe(
-        createHttpTransport({
+        createHttpTransportForSolanaRpc({
             ...config,
             headers: {
+                ...(__NODEJS__ &&
+                    ({
+                        // Keep these headers lowercase so they will be overridden by any user-supplied headers below.
+                        'accept-encoding':
+                            // Natively supported by Node LTS v20.18.0 and above.
+                            'br,gzip,deflate', // Brotli, gzip, and Deflate, in that order.
+                    } as { [overrideHeader: string]: string })),
                 ...(config.headers ? normalizeHeaders(config.headers) : undefined),
                 ...({
                     // Keep these headers lowercase so they will override any user-supplied headers above.
-                    'solana-client': `js/${__VERSION__}` ?? 'UNKNOWN',
+                    'solana-client': __VERSION__ ? `js/${__VERSION__}` : 'UNKNOWN',
                 } as { [overrideHeader: string]: string }),
             },
         }) as RpcTransportFromClusterUrl<TClusterUrl>,

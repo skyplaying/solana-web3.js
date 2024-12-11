@@ -1,15 +1,17 @@
-let _nextMessageId = 0;
-function getNextMessageId() {
+import { RpcRequest } from './rpc-request';
+
+let _nextMessageId = 0n;
+function getNextMessageId(): string {
     const id = _nextMessageId;
-    _nextMessageId = (_nextMessageId + 1) % Number.MAX_SAFE_INTEGER;
-    return id;
+    _nextMessageId++;
+    return id.toString();
 }
 
-export function createRpcMessage<TParams>(method: string, params: TParams) {
+export function createRpcMessage<TParams>(request: RpcRequest<TParams>) {
     return {
         id: getNextMessageId(),
         jsonrpc: '2.0',
-        method,
-        params,
+        method: request.methodName,
+        params: request.params,
     };
 }

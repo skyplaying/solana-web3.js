@@ -1,4 +1,3 @@
-import type { RpcApiMethods } from '@solana/rpc-spec';
 import type {
     Base58EncodedBytes,
     Blockhash,
@@ -10,7 +9,6 @@ import type {
     TransactionForFullBase64,
     TransactionForFullJson,
     TransactionForFullJsonParsed,
-    U64UnsafeBeyond2Pow53Minus1,
     UnixTimestamp,
 } from '@solana/rpc-types';
 import type { TransactionVersion } from '@solana/transaction-messages';
@@ -19,8 +17,8 @@ import type { TransactionVersion } from '@solana/transaction-messages';
 
 type GetBlockApiResponseBase = Readonly<{
     /** The number of blocks beneath this block */
-    blockHeight: U64UnsafeBeyond2Pow53Minus1;
-    /** The number of blocks beneath this block */
+    blockHeight: bigint;
+    /** Estimated production time, as Unix timestamp */
     blockTime: UnixTimestamp;
     /** the blockhash of this block */
     blockhash: Blockhash;
@@ -62,7 +60,7 @@ type GetBlockEncoding = 'base58' | 'base64' | 'json' | 'jsonParsed';
 // - These rules apply to both "accounts" and "full" transaction details.
 type GetBlockMaxSupportedTransactionVersion = Exclude<TransactionVersion, 'legacy'>;
 
-export interface GetBlockApi extends RpcApiMethods {
+export type GetBlockApi = {
     /**
      * Returns identity and transaction information about a confirmed block in the ledger
      */
@@ -375,4 +373,4 @@ export interface GetBlockApi extends RpcApiMethods {
               GetBlockApiResponseWithRewards &
               GetBlockApiResponseWithTransactions<TransactionForFullJson<void>>)
         | null;
-}
+};

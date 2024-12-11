@@ -1,6 +1,5 @@
 import type { Address } from '@solana/addresses';
 import type { JsonParsedTokenAccount } from '@solana/rpc-parsed-types';
-import type { RpcApiMethods } from '@solana/rpc-spec';
 import type {
     AccountInfoBase,
     AccountInfoWithBase58Bytes,
@@ -12,7 +11,6 @@ import type {
     DataSlice,
     Slot,
     SolanaRpcResponse,
-    U64UnsafeBeyond2Pow53Minus1,
 } from '@solana/rpc-types';
 
 type TokenAccountInfoWithJsonData = Readonly<{
@@ -23,9 +21,11 @@ type TokenAccountInfoWithJsonData = Readonly<{
         };
         /** Name of the program that owns this account. */
         program: Address;
-        space: U64UnsafeBeyond2Pow53Minus1;
+        space: bigint;
     }>;
 }>;
+
+type GetTokenAccountsByOwnerResponse<T> = readonly AccountInfoWithPubkey<AccountInfoBase & T>[];
 
 type MintFilter = Readonly<{
     /** Pubkey of the specific token Mint to limit accounts to */
@@ -50,7 +50,7 @@ type GetTokenAccountsByOwnerApiSliceableCommonConfig = Readonly<{
     /** Limit the returned account data */
     dataSlice?: DataSlice;
 }>;
-export interface GetTokenAccountsByOwnerApi extends RpcApiMethods {
+export type GetTokenAccountsByOwnerApi = {
     /**
      * Returns all SPL Token accounts by token owner.
      */
@@ -62,7 +62,7 @@ export interface GetTokenAccountsByOwnerApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'base64';
             }>,
-    ): SolanaRpcResponse<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithBase64EncodedData>[]>;
+    ): SolanaRpcResponse<GetTokenAccountsByOwnerResponse<AccountInfoWithBase64EncodedData>>;
 
     getTokenAccountsByOwner(
         owner: Address,
@@ -72,7 +72,7 @@ export interface GetTokenAccountsByOwnerApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'base64+zstd';
             }>,
-    ): SolanaRpcResponse<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithBase64EncodedZStdCompressedData>[]>;
+    ): SolanaRpcResponse<GetTokenAccountsByOwnerResponse<AccountInfoWithBase64EncodedZStdCompressedData>>;
 
     getTokenAccountsByOwner(
         owner: Address,
@@ -81,7 +81,7 @@ export interface GetTokenAccountsByOwnerApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'jsonParsed';
             }>,
-    ): SolanaRpcResponse<AccountInfoWithPubkey<AccountInfoBase & TokenAccountInfoWithJsonData>[]>;
+    ): SolanaRpcResponse<GetTokenAccountsByOwnerResponse<TokenAccountInfoWithJsonData>>;
 
     getTokenAccountsByOwner(
         owner: Address,
@@ -91,11 +91,11 @@ export interface GetTokenAccountsByOwnerApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'base58';
             }>,
-    ): SolanaRpcResponse<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithBase58EncodedData>[]>;
+    ): SolanaRpcResponse<GetTokenAccountsByOwnerResponse<AccountInfoWithBase58EncodedData>>;
 
     getTokenAccountsByOwner(
         owner: Address,
         filter: AccountsFilter,
         config?: GetTokenAccountsByOwnerApiCommonConfig & GetTokenAccountsByOwnerApiSliceableCommonConfig,
-    ): SolanaRpcResponse<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithBase58Bytes>[]>;
-}
+    ): SolanaRpcResponse<GetTokenAccountsByOwnerResponse<AccountInfoWithBase58Bytes>>;
+};

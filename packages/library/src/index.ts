@@ -15,7 +15,16 @@ export * from '@solana/transaction-messages';
 export * from '@solana/transactions';
 export * from './airdrop';
 export * from './compute-limit';
-export * from './decode-transaction-message';
+export * from './decompile-transaction-message-fetching-lookup-tables';
 export * from './send-and-confirm-durable-nonce-transaction';
 export * from './send-and-confirm-transaction';
 export * from './send-transaction-without-confirming';
+
+export type {
+    RpcRequest,
+    RpcRequestTransformer,
+    RpcResponse,
+    RpcResponseData,
+    RpcResponseTransformer,
+} from '@solana/rpc-spec-types';
+export { createRpcMessage } from '@solana/rpc-spec-types';

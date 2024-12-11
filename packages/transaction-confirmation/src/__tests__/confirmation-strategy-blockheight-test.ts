@@ -156,22 +156,16 @@ describe('createBlockHeightExceedencePromiseFactory', () => {
                 abortSignal: new AbortController().signal,
                 commitment,
                 lastValidBlockHeight: 100n,
-            });
+            }).catch(() => {});
             expect(getEpochInfoMock).toHaveBeenCalledWith({ commitment });
         },
     );
     it('calls the abort signal passed to the epoch info fetcher when aborted', () => {
         const abortController = new AbortController();
-        (async () => {
-            try {
-                await getBlockHeightExceedencePromise({
-                    abortSignal: abortController.signal,
-                    lastValidBlockHeight: 100n,
-                });
-            } catch {
-                /* empty */
-            }
-        })();
+        getBlockHeightExceedencePromise({
+            abortSignal: abortController.signal,
+            lastValidBlockHeight: 100n,
+        }).catch(() => {});
         expect(getEpochInfoRequestSender).toHaveBeenCalledWith({
             abortSignal: expect.objectContaining({ aborted: false }),
         });
@@ -182,16 +176,10 @@ describe('createBlockHeightExceedencePromiseFactory', () => {
     });
     it('calls the abort signal passed to the slot subscription when aborted', () => {
         const abortController = new AbortController();
-        (async () => {
-            try {
-                await getBlockHeightExceedencePromise({
-                    abortSignal: abortController.signal,
-                    lastValidBlockHeight: 100n,
-                });
-            } catch {
-                /* empty */
-            }
-        })();
+        getBlockHeightExceedencePromise({
+            abortSignal: abortController.signal,
+            lastValidBlockHeight: 100n,
+        }).catch(() => {});
         expect(createSubscriptionIterable).toHaveBeenCalledWith({
             abortSignal: expect.objectContaining({ aborted: false }),
         });
@@ -203,7 +191,6 @@ describe('createBlockHeightExceedencePromiseFactory', () => {
     it('throws errors thrown from the epoch info fetcher', async () => {
         expect.assertions(1);
         const abortController = new AbortController();
-        abortController.abort();
         getEpochInfoRequestSender.mockRejectedValue(new Error('o no'));
         await expect(
             getBlockHeightExceedencePromise({
@@ -215,7 +202,6 @@ describe('createBlockHeightExceedencePromiseFactory', () => {
     it('throws errors thrown from the slot subscription', async () => {
         expect.assertions(1);
         const abortController = new AbortController();
-        abortController.abort();
         createSubscriptionIterable.mockRejectedValue(new Error('o no'));
         await expect(
             getBlockHeightExceedencePromise({
@@ -223,5 +209,56 @@ describe('createBlockHeightExceedencePromiseFactory', () => {
                 lastValidBlockHeight: 100n,
             }),
         ).rejects.toThrow('o no');
+    });
+    it('throws if started aborted', async () => {
+        expect.assertions(1);
+        const abortController = new AbortController();
+        abortController.abort();
+        await expect(
+            getBlockHeightExceedencePromise({
+                abortSignal: abortController.signal,
+                lastValidBlockHeight: 100n,
+            }),
+        ).rejects.toThrow(/operation was aborted/);
+    });
+    it('throws if aborted while waiting for the epoch info', async () => {
+        expect.assertions(1);
+        const abortController = new AbortController();
+        let resolveEpochInfo!: (value: { absoluteSlot: bigint; blockHeight: bigint }) => void;
+        const epochInfoPromise = new Promise(r => {
+            resolveEpochInfo = r;
+        });
+        getEpochInfoRequestSender.mockReturnValue(epochInfoPromise);
+        const blockHeightExceedencePromise = getBlockHeightExceedencePromise({
+            abortSignal: abortController.signal,
+            lastValidBlockHeight: 100n,
+        });
+        await jest.runAllTimersAsync();
+        abortController.abort();
+        resolveEpochInfo({ absoluteSlot: 101n, blockHeight: 101n });
+        await expect(blockHeightExceedencePromise).rejects.toThrow(/operation was aborted/);
+    });
+    it('throws if aborted while the slot subscription is working', async () => {
+        expect.assertions(1);
+        const abortController = new AbortController();
+        let resolveSlotSubscription!: (value: { slot: bigint }) => void;
+        const slotSubscriptionReturnPromise = new Promise(r => {
+            resolveSlotSubscription = r;
+        });
+        getEpochInfoRequestSender.mockResolvedValue({ absoluteSlot: 100n, blockHeight: 100n });
+        slotNotificationsGenerator.mockImplementation(
+            // eslint-disable-next-line require-yield
+            async function* () {
+                await slotSubscriptionReturnPromise;
+            },
+        );
+        const blockHeightExceedencePromise = getBlockHeightExceedencePromise({
+            abortSignal: abortController.signal,
+            lastValidBlockHeight: 100n,
+        });
+        await jest.runAllTimersAsync();
+        abortController.abort();
+        resolveSlotSubscription({ slot: 101n });
+        await expect(blockHeightExceedencePromise).rejects.toThrow(/operation was aborted/);
     });
 });

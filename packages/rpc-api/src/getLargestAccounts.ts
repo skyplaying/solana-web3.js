@@ -1,17 +1,16 @@
 import type { Address } from '@solana/addresses';
-import type { RpcApiMethods } from '@solana/rpc-spec';
-import type { Commitment, LamportsUnsafeBeyond2Pow53Minus1, SolanaRpcResponse } from '@solana/rpc-types';
+import type { Commitment, Lamports, SolanaRpcResponse } from '@solana/rpc-types';
 
 type GetLargestAccountsResponseItem = Readonly<{
     /** Base-58 encoded address of the account */
     address: Address;
     /** Number of lamports in the account */
-    lamports: LamportsUnsafeBeyond2Pow53Minus1;
+    lamports: Lamports;
 }>;
 
-type GetLargestAccountsApiResponse = SolanaRpcResponse<GetLargestAccountsResponseItem[]>;
+type GetLargestAccountsApiResponse = readonly GetLargestAccountsResponseItem[];
 
-export interface GetLargestAccountsApi extends RpcApiMethods {
+export type GetLargestAccountsApi = {
     /**
      * Returns the 20 largest accounts, by lamport balance
      * (results may be cached up to two hours)
@@ -22,5 +21,5 @@ export interface GetLargestAccountsApi extends RpcApiMethods {
             /** Filter results by account type */
             filter?: 'circulating' | 'nonCirculating';
         }>,
-    ): GetLargestAccountsApiResponse;
-}
+    ): SolanaRpcResponse<GetLargestAccountsApiResponse>;
+};

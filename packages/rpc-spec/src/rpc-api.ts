@@ -1,27 +1,42 @@
-import { Callable } from '@solana/rpc-spec-types';
+import {
+    Callable,
+    createRpcMessage,
+    RpcRequestTransformer,
+    RpcResponse,
+    RpcResponseTransformer,
+} from '@solana/rpc-spec-types';
 
-import { RpcRequest } from './rpc-request';
+import type { RpcTransport } from './rpc-transport';
 
 export type RpcApiConfig = Readonly<{
-    parametersTransformer?: <T extends unknown[]>(params: T, methodName: string) => unknown;
-    responseTransformer?: <T>(response: unknown, methodName: string) => T;
+    requestTransformer?: RpcRequestTransformer;
+    responseTransformer?: RpcResponseTransformer;
 }>;
+
+export type RpcPlan<TResponse> = {
+    execute: (
+        config: Readonly<{
+            signal?: AbortSignal;
+            transport: RpcTransport;
+        }>,
+    ) => Promise<RpcResponse<TResponse>>;
+};
 
 export type RpcApi<TRpcMethods> = {
     [MethodName in keyof TRpcMethods]: RpcReturnTypeMapper<TRpcMethods[MethodName]>;
 };
 
 type RpcReturnTypeMapper<TRpcMethod> = TRpcMethod extends Callable
-    ? (...rawParams: unknown[]) => RpcRequest<ReturnType<TRpcMethod>>
+    ? (...rawParams: unknown[]) => RpcPlan<ReturnType<TRpcMethod>>
     : never;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RpcApiMethod = (...args: any) => any;
-export interface RpcApiMethods {
+interface RpcApiMethods {
     [methodName: string]: RpcApiMethod;
 }
 
-export function createRpcApi<TRpcMethods extends RpcApiMethods>(config?: RpcApiConfig): RpcApi<TRpcMethods> {
+export function createJsonRpcApi<TRpcMethods extends RpcApiMethods>(config?: RpcApiConfig): RpcApi<TRpcMethods> {
     return new Proxy({} as RpcApi<TRpcMethods>, {
         defineProperty() {
             return false;
@@ -38,18 +53,19 @@ export function createRpcApi<TRpcMethods extends RpcApiMethods>(config?: RpcApiC
                 ...rawParams: Parameters<
                     TRpcMethods[TMethodName] extends CallableFunction ? TRpcMethods[TMethodName] : never
                 >
-            ): RpcRequest<ReturnType<TRpcMethods[TMethodName]>> {
-                const params = config?.parametersTransformer
-                    ? config?.parametersTransformer(rawParams, methodName)
-                    : rawParams;
-                const responseTransformer = config?.responseTransformer
-                    ? config?.responseTransformer<ReturnType<TRpcMethods[TMethodName]>>
-                    : (rawResponse: unknown) => rawResponse as ReturnType<TRpcMethods[TMethodName]>;
-                return {
-                    methodName,
-                    params,
-                    responseTransformer,
-                };
+            ): RpcPlan<ReturnType<TRpcMethods[TMethodName]>> {
+                const rawRequest = Object.freeze({ methodName, params: rawParams });
+                const request = config?.requestTransformer ? config?.requestTransformer(rawRequest) : rawRequest;
+                return Object.freeze(<RpcPlan<ReturnType<TRpcMethods[TMethodName]>>>{
+                    execute: async ({ signal, transport }) => {
+                        const payload = createRpcMessage(request);
+                        const response = await transport({ payload, signal });
+                        if (!config?.responseTransformer) {
+                            return response;
+                        }
+                        return config.responseTransformer(response, request);
+                    },
+                });
             };
         },
     });

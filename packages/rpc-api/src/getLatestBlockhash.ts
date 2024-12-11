@@ -1,14 +1,13 @@
-import type { RpcApiMethods } from '@solana/rpc-spec';
-import type { Blockhash, Commitment, Slot, SolanaRpcResponse, U64UnsafeBeyond2Pow53Minus1 } from '@solana/rpc-types';
+import type { Blockhash, Commitment, Slot, SolanaRpcResponse } from '@solana/rpc-types';
 
-type GetLatestBlockhashApiResponse = SolanaRpcResponse<{
+type GetLatestBlockhashApiResponse = Readonly<{
     /** a Hash as base-58 encoded string */
     blockhash: Blockhash;
     /** last block height at which the blockhash will be valid */
-    lastValidBlockHeight: U64UnsafeBeyond2Pow53Minus1;
+    lastValidBlockHeight: bigint;
 }>;
 
-export interface GetLatestBlockhashApi extends RpcApiMethods {
+export type GetLatestBlockhashApi = {
     /**
      * Returns the latest blockhash
      */
@@ -17,5 +16,5 @@ export interface GetLatestBlockhashApi extends RpcApiMethods {
             commitment?: Commitment;
             minContextSlot?: Slot;
         }>,
-    ): GetLatestBlockhashApiResponse;
-}
+    ): SolanaRpcResponse<GetLatestBlockhashApiResponse>;
+};

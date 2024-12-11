@@ -1,9 +1,8 @@
 import type { Address } from '@solana/addresses';
-import type { RpcApiMethods } from '@solana/rpc-spec';
-import type { Commitment, Slot, SolanaRpcResponse, U64UnsafeBeyond2Pow53Minus1 } from '@solana/rpc-types';
+import type { Commitment, Slot, SolanaRpcResponse } from '@solana/rpc-types';
 
-type NumberOfLeaderSlots = U64UnsafeBeyond2Pow53Minus1;
-type NumberOfBlocksProduced = U64UnsafeBeyond2Pow53Minus1;
+type NumberOfLeaderSlots = bigint;
+type NumberOfBlocksProduced = bigint;
 
 type SlotRange = Readonly<{
     firstSlot: Slot;
@@ -15,23 +14,24 @@ type GetBlockProductionApiConfigBase = Readonly<{
     range?: SlotRange;
 }>;
 
-type GetBlockProductionApiResponseBase = SolanaRpcResponse<{
-    range: SlotRange;
-}>;
-
-type GetBlockProductionApiResponseWithAllIdentities = Readonly<{
-    value: Readonly<{
-        byIdentity: Record<Address, [NumberOfLeaderSlots, NumberOfBlocksProduced]>;
-    }>;
-}>;
-
-type GetBlockProductionApiResponseWithSingleIdentity<TIdentity extends string> = Readonly<{
+type BlockProductionWithSingleIdentity<TIdentity extends string> = Readonly<{
     value: Readonly<{
         byIdentity: Readonly<{ [TAddress in TIdentity]?: [NumberOfLeaderSlots, NumberOfBlocksProduced] }>;
     }>;
 }>;
 
-export interface GetBlockProductionApi extends RpcApiMethods {
+type BlockProductionWithAllIdentities = Readonly<{
+    value: Readonly<{
+        byIdentity: Record<Address, [NumberOfLeaderSlots, NumberOfBlocksProduced]>;
+    }>;
+}>;
+
+type GetBlockProductionApiResponse<T> = Readonly<{
+    byIdentity: T;
+    range: SlotRange;
+}>;
+
+export type GetBlockProductionApi = {
     /**
      * Returns recent block production information from the current or previous epoch.
      */
@@ -40,8 +40,8 @@ export interface GetBlockProductionApi extends RpcApiMethods {
             Readonly<{
                 identity: TIdentity;
             }>,
-    ): GetBlockProductionApiResponseBase & GetBlockProductionApiResponseWithSingleIdentity<TIdentity>;
+    ): SolanaRpcResponse<GetBlockProductionApiResponse<BlockProductionWithSingleIdentity<TIdentity>>>;
     getBlockProduction(
         config?: GetBlockProductionApiConfigBase,
-    ): GetBlockProductionApiResponseBase & GetBlockProductionApiResponseWithAllIdentities;
-}
+    ): SolanaRpcResponse<GetBlockProductionApiResponse<BlockProductionWithAllIdentities>>;
+};

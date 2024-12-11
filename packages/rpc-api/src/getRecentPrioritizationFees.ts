@@ -1,19 +1,20 @@
 import type { Address } from '@solana/addresses';
-import type { RpcApiMethods } from '@solana/rpc-spec';
-import type { MicroLamportsUnsafeBeyond2Pow53Minus1, Slot } from '@solana/rpc-types';
+import type { MicroLamports, Slot } from '@solana/rpc-types';
 
-type GetRecentPrioritizationFeesApiResponse = Readonly<{
+type RecentPrioritizationFee = Readonly<{
     /**
      * The per-compute-unit fee paid by at least one successfully
      * landed transaction, specified in increments of
      * micro-lamports (0.000001 lamports).
      */
-    prioritizationFee: MicroLamportsUnsafeBeyond2Pow53Minus1;
+    prioritizationFee: MicroLamports;
     /** Slot in which the fee was observed */
     slot: Slot;
-}>[];
+}>;
 
-export interface GetRecentPrioritizationFeesApi extends RpcApiMethods {
+type GetRecentPrioritizationFeesApiResponse = readonly RecentPrioritizationFee[];
+
+export type GetRecentPrioritizationFeesApi = {
     /**
      * Returns the balance of the account of provided Pubkey
      */
@@ -28,4 +29,4 @@ export interface GetRecentPrioritizationFeesApi extends RpcApiMethods {
          */
         addresses?: Address[],
     ): GetRecentPrioritizationFeesApiResponse;
-}
+};

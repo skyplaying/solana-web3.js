@@ -1,5 +1,4 @@
 import type { Address } from '@solana/addresses';
-import type { RpcApiMethods } from '@solana/rpc-spec';
 import type {
     AccountInfoBase,
     AccountInfoWithBase58Bytes,
@@ -13,11 +12,7 @@ import type {
     SolanaRpcResponse,
 } from '@solana/rpc-types';
 
-type GetAccountInfoApiResponseBase = SolanaRpcResponse<AccountInfoBase | null>;
-
-type NestInRpcResponseOrNull<T> = Readonly<{
-    value: T | null;
-}>;
+type GetAccountInfoApiResponse<T> = (AccountInfoBase & T) | null;
 
 type GetAccountInfoApiCommonConfig = Readonly<{
     // Defaults to `finalized`
@@ -31,7 +26,7 @@ type GetAccountInfoApiSliceableCommonConfig = Readonly<{
     dataSlice?: DataSlice;
 }>;
 
-export interface GetAccountInfoApi extends RpcApiMethods {
+export type GetAccountInfoApi = {
     /**
      * Returns all information associated with the account of provided public key
      */
@@ -42,7 +37,7 @@ export interface GetAccountInfoApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'base64';
             }>,
-    ): GetAccountInfoApiResponseBase & NestInRpcResponseOrNull<AccountInfoWithBase64EncodedData>;
+    ): SolanaRpcResponse<GetAccountInfoApiResponse<AccountInfoWithBase64EncodedData>>;
     getAccountInfo(
         address: Address,
         config: GetAccountInfoApiCommonConfig &
@@ -50,14 +45,14 @@ export interface GetAccountInfoApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'base64+zstd';
             }>,
-    ): GetAccountInfoApiResponseBase & NestInRpcResponseOrNull<AccountInfoWithBase64EncodedZStdCompressedData>;
+    ): SolanaRpcResponse<GetAccountInfoApiResponse<AccountInfoWithBase64EncodedZStdCompressedData>>;
     getAccountInfo(
         address: Address,
         config: GetAccountInfoApiCommonConfig &
             Readonly<{
                 encoding: 'jsonParsed';
             }>,
-    ): GetAccountInfoApiResponseBase & NestInRpcResponseOrNull<AccountInfoWithJsonData>;
+    ): SolanaRpcResponse<GetAccountInfoApiResponse<AccountInfoWithJsonData>>;
     getAccountInfo(
         address: Address,
         config: GetAccountInfoApiCommonConfig &
@@ -65,9 +60,9 @@ export interface GetAccountInfoApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'base58';
             }>,
-    ): GetAccountInfoApiResponseBase & NestInRpcResponseOrNull<AccountInfoWithBase58EncodedData>;
+    ): SolanaRpcResponse<GetAccountInfoApiResponse<AccountInfoWithBase58EncodedData>>;
     getAccountInfo(
         address: Address,
         config?: GetAccountInfoApiCommonConfig,
-    ): GetAccountInfoApiResponseBase & NestInRpcResponseOrNull<AccountInfoWithBase58Bytes>;
-}
+    ): SolanaRpcResponse<GetAccountInfoApiResponse<AccountInfoWithBase58Bytes>>;
+};

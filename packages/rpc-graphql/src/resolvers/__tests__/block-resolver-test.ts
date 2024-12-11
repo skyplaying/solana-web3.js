@@ -8,7 +8,7 @@ import type {
 } from '@solana/rpc';
 import type { Slot } from '@solana/rpc-types';
 
-import { createRpcGraphQL, RpcGraphQL } from '../../index';
+import { createSolanaRpcGraphQL, RpcGraphQL } from '../../index';
 
 const FOREVER_PROMISE = new Promise(() => {
     /* never resolve */
@@ -29,7 +29,7 @@ describe('block resolver', () => {
             getProgramAccounts: jest.fn().mockReturnValue({ send: jest.fn().mockReturnValue(FOREVER_PROMISE) }),
             getTransaction: jest.fn().mockReturnValue({ send: jest.fn().mockReturnValue(FOREVER_PROMISE) }),
         };
-        rpcGraphQL = createRpcGraphQL(rpc);
+        rpcGraphQL = createSolanaRpcGraphQL(rpc);
     });
     describe('fragment spreads', () => {
         it('will resolve fields from fragment spreads', async () => {
@@ -44,7 +44,7 @@ describe('block resolver', () => {
                     blockhash
                 }
             `;
-            rpcGraphQL.query(source, { slot });
+            rpcGraphQL.query(source, { slot }).catch(() => {});
             await jest.runAllTimersAsync();
             expect(rpc.getBlock).toHaveBeenCalledTimes(1);
             expect(rpc.getBlock).toHaveBeenLastCalledWith(slot, {
@@ -69,7 +69,7 @@ describe('block resolver', () => {
                     parentSlot
                 }
             `;
-            rpcGraphQL.query(source, { slot });
+            rpcGraphQL.query(source, { slot }).catch(() => {});
             await jest.runAllTimersAsync();
             expect(rpc.getBlock).toHaveBeenCalledTimes(1);
             expect(rpc.getBlock).toHaveBeenLastCalledWith(slot, {
@@ -98,7 +98,7 @@ describe('block resolver', () => {
                     }
                 }
             `;
-            rpcGraphQL.query(source, { slot });
+            rpcGraphQL.query(source, { slot }).catch(() => {});
             await jest.runAllTimersAsync();
             expect(rpc.getBlock).toHaveBeenCalledTimes(1);
             expect(rpc.getBlock).toHaveBeenLastCalledWith(slot, {
@@ -129,7 +129,7 @@ describe('block resolver', () => {
                     }
                 }
             `;
-            rpcGraphQL.query(source, { slot });
+            rpcGraphQL.query(source, { slot }).catch(() => {});
             await jest.runAllTimersAsync();
             expect(rpc.getBlock).toHaveBeenCalledTimes(2);
             expect(rpc.getBlock).toHaveBeenCalledWith(slot, {
@@ -159,7 +159,7 @@ describe('block resolver', () => {
                     transactionData: data(encoding: BASE_58)
                 }
             `;
-            rpcGraphQL.query(source, { slot });
+            rpcGraphQL.query(source, { slot }).catch(() => {});
             await jest.runAllTimersAsync();
             expect(rpc.getBlock).toHaveBeenCalledTimes(1);
             expect(rpc.getBlock).toHaveBeenLastCalledWith(slot, {

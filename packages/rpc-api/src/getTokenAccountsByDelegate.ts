@@ -1,6 +1,5 @@
 import type { Address } from '@solana/addresses';
 import type { JsonParsedTokenAccount } from '@solana/rpc-parsed-types';
-import type { RpcApiMethods } from '@solana/rpc-spec';
 import type {
     AccountInfoBase,
     AccountInfoWithBase58Bytes,
@@ -12,7 +11,6 @@ import type {
     DataSlice,
     Slot,
     SolanaRpcResponse,
-    U64UnsafeBeyond2Pow53Minus1,
 } from '@solana/rpc-types';
 
 type TokenAccountInfoWithJsonData = Readonly<{
@@ -23,9 +21,11 @@ type TokenAccountInfoWithJsonData = Readonly<{
         };
         /** Name of the program that owns this account. */
         program: Address;
-        space: U64UnsafeBeyond2Pow53Minus1;
+        space: bigint;
     }>;
 }>;
+
+type GetTokenAccountsByDelegateResponse<T> = readonly AccountInfoWithPubkey<AccountInfoBase & T>[];
 
 type MintFilter = Readonly<{
     /** Pubkey of the specific token Mint to limit accounts to */
@@ -50,7 +50,8 @@ type GetTokenAccountsByDelegateApiSliceableCommonConfig = Readonly<{
     /** Limit the returned account data */
     dataSlice?: DataSlice;
 }>;
-export interface GetTokenAccountsByDelegateApi extends RpcApiMethods {
+
+export type GetTokenAccountsByDelegateApi = {
     /**
      * Returns all SPL Token accounts by approved Delegate.
      */
@@ -62,7 +63,7 @@ export interface GetTokenAccountsByDelegateApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'base64';
             }>,
-    ): SolanaRpcResponse<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithBase64EncodedData>[]>;
+    ): SolanaRpcResponse<GetTokenAccountsByDelegateResponse<AccountInfoWithBase64EncodedData>>;
 
     getTokenAccountsByDelegate(
         program: Address,
@@ -72,7 +73,7 @@ export interface GetTokenAccountsByDelegateApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'base64+zstd';
             }>,
-    ): SolanaRpcResponse<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithBase64EncodedZStdCompressedData>[]>;
+    ): SolanaRpcResponse<GetTokenAccountsByDelegateResponse<AccountInfoWithBase64EncodedZStdCompressedData>>;
 
     getTokenAccountsByDelegate(
         program: Address,
@@ -81,7 +82,7 @@ export interface GetTokenAccountsByDelegateApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'jsonParsed';
             }>,
-    ): SolanaRpcResponse<AccountInfoWithPubkey<AccountInfoBase & TokenAccountInfoWithJsonData>[]>;
+    ): SolanaRpcResponse<GetTokenAccountsByDelegateResponse<TokenAccountInfoWithJsonData>>;
 
     getTokenAccountsByDelegate(
         program: Address,
@@ -91,11 +92,11 @@ export interface GetTokenAccountsByDelegateApi extends RpcApiMethods {
             Readonly<{
                 encoding: 'base58';
             }>,
-    ): SolanaRpcResponse<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithBase58EncodedData>[]>;
+    ): SolanaRpcResponse<GetTokenAccountsByDelegateResponse<AccountInfoWithBase58EncodedData>>;
 
     getTokenAccountsByDelegate(
         program: Address,
         filter: AccountsFilter,
         config?: GetTokenAccountsByDelegateApiCommonConfig & GetTokenAccountsByDelegateApiSliceableCommonConfig,
-    ): SolanaRpcResponse<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithBase58Bytes>[]>;
-}
+    ): SolanaRpcResponse<GetTokenAccountsByDelegateResponse<AccountInfoWithBase58Bytes>>;
+};

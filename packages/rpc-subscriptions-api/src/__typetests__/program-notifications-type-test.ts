@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import type { Address } from '@solana/addresses';
 import type { PendingRpcSubscriptionsRequest, RpcSubscriptions } from '@solana/rpc-subscriptions-spec';
 import type {
@@ -8,9 +7,8 @@ import type {
     Base64EncodedBytes,
     Base64EncodedDataResponse,
     Base64EncodedZStdCompressedDataResponse,
-    LamportsUnsafeBeyond2Pow53Minus1,
+    Lamports,
     SolanaRpcResponse,
-    U64UnsafeBeyond2Pow53Minus1,
 } from '@solana/rpc-types';
 
 import type { ProgramNotificationsApi } from '../program-notifications';
@@ -24,9 +22,9 @@ const programId =
 type TNotificationBase = Readonly<{
     account: Readonly<{
         executable: boolean;
-        lamports: LamportsUnsafeBeyond2Pow53Minus1;
+        lamports: Lamports;
         owner: Address;
-        rentEpoch: U64UnsafeBeyond2Pow53Minus1;
+        rentEpoch: bigint;
     }>;
     pubkey: Address;
 }>;
@@ -162,7 +160,7 @@ rpcSubscriptions.programNotifications(programId, {
                     | Readonly<{
                           parsed: unknown;
                           program: string;
-                          space: U64UnsafeBeyond2Pow53Minus1;
+                          space: bigint;
                       }>;
             };
         }
@@ -180,7 +178,7 @@ rpcSubscriptions
                         | Readonly<{
                               parsed: unknown;
                               program: string;
-                              space: U64UnsafeBeyond2Pow53Minus1;
+                              space: bigint;
                           }>;
                 };
             }
@@ -195,7 +193,7 @@ rpcSubscriptions
             memcmp: {
                 bytes: 'bytes' as Base58EncodedBytes,
                 encoding: 'base58',
-                offset: 0n as U64UnsafeBeyond2Pow53Minus1,
+                offset: 0n,
             },
         },
     ],
@@ -208,7 +206,7 @@ rpcSubscriptions
             memcmp: {
                 bytes: 'bytes' as Base58EncodedBytes,
                 encoding: 'base64',
-                offset: 0n as U64UnsafeBeyond2Pow53Minus1,
+                offset: 0n,
             },
         },
     ],
@@ -219,7 +217,7 @@ rpcSubscriptions
             memcmp: {
                 bytes: 'bytes' as Base64EncodedBytes,
                 encoding: 'base64',
-                offset: 0n as U64UnsafeBeyond2Pow53Minus1,
+                offset: 0n,
             },
         },
     ],
@@ -232,7 +230,7 @@ rpcSubscriptions
             memcmp: {
                 bytes: 'bytes' as Base64EncodedBytes,
                 encoding: 'base58',
-                offset: 0n as U64UnsafeBeyond2Pow53Minus1,
+                offset: 0n,
             },
         },
     ],

@@ -1,12 +1,14 @@
-import { createRpcApi, RpcApi } from '@solana/rpc-spec';
+import { createJsonRpcApi, RpcApi } from '@solana/rpc-spec';
 import {
     AllowedNumericKeypaths,
-    getDefaultParamsTransformerForSolanaRpc,
+    getDefaultRequestTransformerForSolanaRpc,
     getDefaultResponseTransformerForSolanaRpc,
+    innerInstructionsConfigs,
     jsonParsedAccountsConfigs,
     jsonParsedTokenAccountsConfigs,
     KEYPATH_WILDCARD,
-    ParamsTransformerConfig,
+    messageConfig,
+    RequestTransformerConfig,
 } from '@solana/rpc-transformers';
 
 import { GetAccountInfoApi } from './getAccountInfo';
@@ -45,7 +47,6 @@ import { GetSignatureStatusesApi } from './getSignatureStatuses';
 import { GetSlotApi } from './getSlot';
 import { GetSlotLeaderApi } from './getSlotLeader';
 import { GetSlotLeadersApi } from './getSlotLeaders';
-import { GetStakeActivationApi } from './getStakeActivation';
 import { GetStakeMinimumDelegationApi } from './getStakeMinimumDelegation';
 import { GetSupplyApi } from './getSupply';
 import { GetTokenAccountBalanceApi } from './getTokenAccountBalance';
@@ -99,7 +100,6 @@ type SolanaRpcApiForAllClusters = GetAccountInfoApi &
     GetSlotApi &
     GetSlotLeaderApi &
     GetSlotLeadersApi &
-    GetStakeActivationApi &
     GetStakeMinimumDelegationApi &
     GetSupplyApi &
     GetTokenAccountBalanceApi &
@@ -158,7 +158,6 @@ export type {
     GetSlotApi,
     GetSlotLeaderApi,
     GetSlotLeadersApi,
-    GetStakeActivationApi,
     GetStakeMinimumDelegationApi,
     GetSupplyApi,
     GetTokenAccountBalanceApi,
@@ -177,13 +176,14 @@ export type {
     SimulateTransactionApi,
 };
 
-type Config = ParamsTransformerConfig;
+type Config = RequestTransformerConfig;
 
 export function createSolanaRpcApi<
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
     TRpcMethods extends SolanaRpcApi | SolanaRpcApiDevnet | SolanaRpcApiMainnet | SolanaRpcApiTestnet = SolanaRpcApi,
 >(config?: Config): RpcApi<TRpcMethods> {
-    return createRpcApi<TRpcMethods>({
-        parametersTransformer: getDefaultParamsTransformerForSolanaRpc(config) as (params: unknown[]) => unknown[],
+    return createJsonRpcApi<TRpcMethods>({
+        requestTransformer: getDefaultRequestTransformerForSolanaRpc(config),
         responseTransformer: getDefaultResponseTransformerForSolanaRpc({
             allowedNumericKeyPaths: getAllowedNumericKeypaths(),
         }),
@@ -201,7 +201,6 @@ function getAllowedNumericKeypaths(): AllowedNumericKeypaths<RpcApi<SolanaRpcApi
         memoizedKeypaths = {
             getAccountInfo: jsonParsedAccountsConfigs.map(c => ['value', ...c]),
             getBlock: [
-                ['blockTime'],
                 ['transactions', KEYPATH_WILDCARD, 'meta', 'preTokenBalances', KEYPATH_WILDCARD, 'accountIndex'],
                 [
                     'transactions',
@@ -223,73 +222,17 @@ function getAllowedNumericKeypaths(): AllowedNumericKeypaths<RpcApi<SolanaRpcApi
                     'decimals',
                 ],
                 ['transactions', KEYPATH_WILDCARD, 'meta', 'rewards', KEYPATH_WILDCARD, 'commission'],
-                ['transactions', KEYPATH_WILDCARD, 'meta', 'innerInstructions', KEYPATH_WILDCARD, 'index'],
-                [
+                ...innerInstructionsConfigs.map(c => [
                     'transactions',
                     KEYPATH_WILDCARD,
                     'meta',
                     'innerInstructions',
                     KEYPATH_WILDCARD,
-                    'instructions',
-                    KEYPATH_WILDCARD,
-                    'programIdIndex',
-                ],
-                [
-                    'transactions',
-                    KEYPATH_WILDCARD,
-                    'meta',
-                    'innerInstructions',
-                    KEYPATH_WILDCARD,
-                    'instructions',
-                    KEYPATH_WILDCARD,
-                    'accounts',
-                    KEYPATH_WILDCARD,
-                ],
-                [
-                    'transactions',
-                    KEYPATH_WILDCARD,
-                    'transaction',
-                    'message',
-                    'addressTableLookups',
-                    KEYPATH_WILDCARD,
-                    'writableIndexes',
-                    KEYPATH_WILDCARD,
-                ],
-                [
-                    'transactions',
-                    KEYPATH_WILDCARD,
-                    'transaction',
-                    'message',
-                    'addressTableLookups',
-                    KEYPATH_WILDCARD,
-                    'readonlyIndexes',
-                    KEYPATH_WILDCARD,
-                ],
-                [
-                    'transactions',
-                    KEYPATH_WILDCARD,
-                    'transaction',
-                    'message',
-                    'instructions',
-                    KEYPATH_WILDCARD,
-                    'programIdIndex',
-                ],
-                [
-                    'transactions',
-                    KEYPATH_WILDCARD,
-                    'transaction',
-                    'message',
-                    'instructions',
-                    KEYPATH_WILDCARD,
-                    'accounts',
-                    KEYPATH_WILDCARD,
-                ],
-                ['transactions', KEYPATH_WILDCARD, 'transaction', 'message', 'header', 'numReadonlySignedAccounts'],
-                ['transactions', KEYPATH_WILDCARD, 'transaction', 'message', 'header', 'numReadonlyUnsignedAccounts'],
-                ['transactions', KEYPATH_WILDCARD, 'transaction', 'message', 'header', 'numRequiredSignatures'],
+                    ...c,
+                ]),
+                ...messageConfig.map(c => ['transactions', KEYPATH_WILDCARD, 'transaction', 'message', ...c] as const),
                 ['rewards', KEYPATH_WILDCARD, 'commission'],
             ],
-            getBlockTime: [[]],
             getClusterNodes: [
                 [KEYPATH_WILDCARD, 'featureSet'],
                 [KEYPATH_WILDCARD, 'shredVersion'],
@@ -333,45 +276,18 @@ function getAllowedNumericKeypaths(): AllowedNumericKeypaths<RpcApi<SolanaRpcApi
                 ['meta', 'postTokenBalances', KEYPATH_WILDCARD, 'accountIndex'],
                 ['meta', 'postTokenBalances', KEYPATH_WILDCARD, 'uiTokenAmount', 'decimals'],
                 ['meta', 'rewards', KEYPATH_WILDCARD, 'commission'],
-                ['meta', 'innerInstructions', KEYPATH_WILDCARD, 'index'],
-                ['meta', 'innerInstructions', KEYPATH_WILDCARD, 'instructions', KEYPATH_WILDCARD, 'programIdIndex'],
-                [
-                    'meta',
-                    'innerInstructions',
-                    KEYPATH_WILDCARD,
-                    'instructions',
-                    KEYPATH_WILDCARD,
-                    'accounts',
-                    KEYPATH_WILDCARD,
-                ],
-                [
-                    'transaction',
-                    'message',
-                    'addressTableLookups',
-                    KEYPATH_WILDCARD,
-                    'writableIndexes',
-                    KEYPATH_WILDCARD,
-                ],
-                [
-                    'transaction',
-                    'message',
-                    'addressTableLookups',
-                    KEYPATH_WILDCARD,
-                    'readonlyIndexes',
-                    KEYPATH_WILDCARD,
-                ],
-                ['transaction', 'message', 'instructions', KEYPATH_WILDCARD, 'programIdIndex'],
-                ['transaction', 'message', 'instructions', KEYPATH_WILDCARD, 'accounts', KEYPATH_WILDCARD],
-                ['transaction', 'message', 'header', 'numReadonlySignedAccounts'],
-                ['transaction', 'message', 'header', 'numReadonlyUnsignedAccounts'],
-                ['transaction', 'message', 'header', 'numRequiredSignatures'],
+                ...innerInstructionsConfigs.map(c => ['meta', 'innerInstructions', KEYPATH_WILDCARD, ...c]),
+                ...messageConfig.map(c => ['transaction', 'message', ...c] as const),
             ],
             getVersion: [['feature-set']],
             getVoteAccounts: [
                 ['current', KEYPATH_WILDCARD, 'commission'],
                 ['delinquent', KEYPATH_WILDCARD, 'commission'],
             ],
-            simulateTransaction: jsonParsedAccountsConfigs.map(c => ['value', 'accounts', KEYPATH_WILDCARD, ...c]),
+            simulateTransaction: [
+                ...jsonParsedAccountsConfigs.map(c => ['value', 'accounts', KEYPATH_WILDCARD, ...c]),
+                ...innerInstructionsConfigs.map(c => ['value', 'innerInstructions', KEYPATH_WILDCARD, ...c]),
+            ],
         };
     }
     return memoizedKeypaths;

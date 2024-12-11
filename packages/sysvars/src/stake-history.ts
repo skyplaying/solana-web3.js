@@ -11,14 +11,14 @@ import {
 } from '@solana/codecs';
 import type { GetAccountInfoApi } from '@solana/rpc-api';
 import type { Rpc } from '@solana/rpc-spec';
-import { getLamportsDecoder, getLamportsEncoder, type LamportsUnsafeBeyond2Pow53Minus1 } from '@solana/rpc-types';
+import { getDefaultLamportsDecoder, getDefaultLamportsEncoder, type Lamports } from '@solana/rpc-types';
 
 import { fetchEncodedSysvarAccount, SYSVAR_STAKE_HISTORY_ADDRESS } from './sysvar';
 
 type Entry = Readonly<{
-    activating: LamportsUnsafeBeyond2Pow53Minus1;
-    deactivating: LamportsUnsafeBeyond2Pow53Minus1;
-    effective: LamportsUnsafeBeyond2Pow53Minus1;
+    activating: Lamports;
+    deactivating: Lamports;
+    effective: Lamports;
 }>;
 
 /**
@@ -31,9 +31,9 @@ export type SysvarStakeHistory = Entry[];
 export function getSysvarStakeHistoryEncoder(): VariableSizeEncoder<SysvarStakeHistory> {
     return getArrayEncoder(
         getStructEncoder([
-            ['effective', getLamportsEncoder()],
-            ['activating', getLamportsEncoder()],
-            ['deactivating', getLamportsEncoder()],
+            ['effective', getDefaultLamportsEncoder()],
+            ['activating', getDefaultLamportsEncoder()],
+            ['deactivating', getDefaultLamportsEncoder()],
         ]),
     );
 }
@@ -41,9 +41,9 @@ export function getSysvarStakeHistoryEncoder(): VariableSizeEncoder<SysvarStakeH
 export function getSysvarStakeHistoryDecoder(): VariableSizeDecoder<SysvarStakeHistory> {
     return getArrayDecoder(
         getStructDecoder([
-            ['effective', getLamportsDecoder()],
-            ['activating', getLamportsDecoder()],
-            ['deactivating', getLamportsDecoder()],
+            ['effective', getDefaultLamportsDecoder()],
+            ['activating', getDefaultLamportsDecoder()],
+            ['deactivating', getDefaultLamportsDecoder()],
         ]),
     );
 }

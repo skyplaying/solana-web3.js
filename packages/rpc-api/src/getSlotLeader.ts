@@ -1,8 +1,9 @@
 import type { Address } from '@solana/addresses';
-import type { RpcApiMethods } from '@solana/rpc-spec';
 import type { Commitment, Slot } from '@solana/rpc-types';
 
-export interface GetSlotLeaderApi extends RpcApiMethods {
+type GetSlotLeaderApiResponse = Address;
+
+export type GetSlotLeaderApi = {
     /**
      * Returns the current slot leader
      */
@@ -11,5 +12,5 @@ export interface GetSlotLeaderApi extends RpcApiMethods {
             commitment?: Commitment;
             minContextSlot?: Slot;
         }>,
-    ): Address;
-}
+    ): GetSlotLeaderApiResponse;
+};

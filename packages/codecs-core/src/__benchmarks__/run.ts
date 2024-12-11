@@ -1,4 +1,4 @@
-#!/usr/bin/env -S pnpm dlx tsx
+#!/usr/bin/env -S pnpm dlx tsx -r ../build-scripts/register-node-globals.cjs
 
 import { webcrypto as crypto } from 'node:crypto';
 
@@ -46,8 +46,7 @@ bench
         { beforeEach: randomizeBytes },
     );
 
-(async () => {
-    await bench.warmup();
+void (async () => {
     await bench.run();
 
     console.table(bench.table());

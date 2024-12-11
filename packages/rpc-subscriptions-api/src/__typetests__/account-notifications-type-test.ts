@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import type { Address } from '@solana/addresses';
 import type { PendingRpcSubscriptionsRequest, RpcSubscriptions } from '@solana/rpc-subscriptions-spec';
 import type {
@@ -7,9 +6,8 @@ import type {
     Base58EncodedDataResponse,
     Base64EncodedDataResponse,
     Base64EncodedZStdCompressedDataResponse,
-    LamportsUnsafeBeyond2Pow53Minus1,
+    Lamports,
     SolanaRpcResponse,
-    U64UnsafeBeyond2Pow53Minus1,
 } from '@solana/rpc-types';
 
 import type { AccountNotificationsApi } from '../account-notifications';
@@ -23,9 +21,9 @@ const pubkey =
 
 type TNotificationBase = Readonly<{
     executable: boolean;
-    lamports: LamportsUnsafeBeyond2Pow53Minus1;
+    lamports: Lamports;
     owner: Address;
-    rentEpoch: U64UnsafeBeyond2Pow53Minus1;
+    rentEpoch: bigint;
 }>;
 
 // No optional configs
@@ -132,7 +130,7 @@ rpcSubscriptions.accountNotifications(pubkey, { encoding: 'jsonParsed' }) satisf
                 | Readonly<{
                       parsed: unknown;
                       program: string;
-                      space: U64UnsafeBeyond2Pow53Minus1;
+                      space: bigint;
                   }>;
         }
     >
@@ -148,7 +146,7 @@ rpcSubscriptions
                     | Readonly<{
                           parsed: unknown;
                           program: string;
-                          space: U64UnsafeBeyond2Pow53Minus1;
+                          space: bigint;
                       }>;
             }
         >

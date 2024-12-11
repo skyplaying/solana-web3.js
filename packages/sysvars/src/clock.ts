@@ -13,11 +13,9 @@ import {
 } from '@solana/codecs';
 import type { GetAccountInfoApi } from '@solana/rpc-api';
 import type { Rpc } from '@solana/rpc-spec';
-import type { Epoch, Slot } from '@solana/rpc-types';
+import type { Epoch, Slot, UnixTimestamp } from '@solana/rpc-types';
 
 import { fetchEncodedSysvarAccount, SYSVAR_CLOCK_ADDRESS } from './sysvar';
-
-type UnixTimestamp = bigint;
 
 type SysvarClockSize = 40;
 

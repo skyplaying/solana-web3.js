@@ -1,39 +1,34 @@
 import type { Address } from '@solana/addresses';
-import type { RpcApiMethods } from '@solana/rpc-spec';
-import type {
-    Commitment,
-    LamportsUnsafeBeyond2Pow53Minus1,
-    Slot,
-    U64UnsafeBeyond2Pow53Minus1,
-} from '@solana/rpc-types';
+import type { Commitment, Lamports, Slot } from '@solana/rpc-types';
 
-type GetInflationRewardApiResponse = Readonly<{
+type GetInflationRewardApiConfig = Readonly<{
+    // Defaults to `finalized`
+    commitment?: Commitment;
+    // An epoch for which the reward occurs.
+    // If omitted, the previous epoch will be used
+    epoch?: bigint;
+    // The minimum slot that the request can be evaluated at
+    minContextSlot?: Slot;
+}>;
+
+type InflationReward = Readonly<{
     // Reward amount in lamports
-    amount: LamportsUnsafeBeyond2Pow53Minus1;
+    amount: Lamports;
     // Vote account commission when the reward was credited
     commission: number;
     // The slot in which the rewards are effective
     effectiveSlot: Slot;
     // Epoch for which reward occurred
-    epoch: U64UnsafeBeyond2Pow53Minus1;
+    epoch: bigint;
     // Post balance of the account in lamports
-    postBalance: LamportsUnsafeBeyond2Pow53Minus1;
+    postBalance: Lamports;
 }>;
 
-export interface GetInflationRewardApi extends RpcApiMethods {
+type GetInflationRewardApiResponse = readonly (InflationReward | null)[];
+
+export type GetInflationRewardApi = {
     /**
      * Returns the current block height of the node
      */
-    getInflationReward(
-        addresses: Address[],
-        config?: Readonly<{
-            // Defaults to `finalized`
-            commitment?: Commitment;
-            // An epoch for which the reward occurs.
-            // If omitted, the previous epoch will be used
-            epoch?: U64UnsafeBeyond2Pow53Minus1;
-            // The minimum slot that the request can be evaluated at
-            minContextSlot?: Slot;
-        }>,
-    ): Promise<readonly (GetInflationRewardApiResponse | null)[]>;
-}
+    getInflationReward(addresses: Address[], config?: GetInflationRewardApiConfig): GetInflationRewardApiResponse;
+};

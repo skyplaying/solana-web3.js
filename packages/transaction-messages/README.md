@@ -1,20 +1,17 @@
 [![npm][npm-image]][npm-url]
 [![npm-downloads][npm-downloads-image]][npm-url]
-[![semantic-release][semantic-release-image]][semantic-release-url]
 <br />
 [![code-style-prettier][code-style-prettier-image]][code-style-prettier-url]
 
 [code-style-prettier-image]: https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square
 [code-style-prettier-url]: https://github.com/prettier/prettier
-[npm-downloads-image]: https://img.shields.io/npm/dm/@solana/transactions/experimental.svg?style=flat
-[npm-image]: https://img.shields.io/npm/v/@solana/transactions/experimental.svg?style=flat
-[npm-url]: https://www.npmjs.com/package/@solana/transactions/v/experimental
-[semantic-release-image]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg
-[semantic-release-url]: https://github.com/semantic-release/semantic-release
+[npm-downloads-image]: https://img.shields.io/npm/dm/@solana/transactions/next.svg?style=flat
+[npm-image]: https://img.shields.io/npm/v/@solana/transactions/next.svg?style=flat
+[npm-url]: https://www.npmjs.com/package/@solana/transactions/v/next
 
 # @solana/transaction-messages
 
-This package contains types and functions for creating transaction messages. It can be used standalone, but it is also exported as part of the Solana JavaScript SDK [`@solana/web3.js@experimental`](https://github.com/solana-labs/solana-web3.js/tree/master/packages/library).
+This package contains types and functions for creating transaction messages. It can be used standalone, but it is also exported as part of the Solana JavaScript SDK [`@solana/web3.js@next`](https://github.com/solana-labs/solana-web3.js/tree/master/packages/library).
 
 Transaction messages are built one step at a time using the transform functions offered by this package. To make it more ergonomic to apply consecutive transforms to your transaction messages, consider using a pipelining helper like the one in `@solana/functional`.
 
@@ -224,3 +221,35 @@ Given an instruction, this method will return a new transaction message with tha
 If you'd like to prepend multiple instructions to a transaction message at once, you may use the `prependTransactionMessageInstructions` function instead which accepts an array of instructions.
 
 See [`appendTransactionMessageInstruction()`](#appendtransactioninstruction) for an example of how to use this function.
+
+## Compress transaction message using lookup tables
+
+### Types
+
+#### `AddressesByLookupTableAddress`
+
+This type represents a mapping of lookup table addresses to the addresses of the accounts that are stored in them.
+
+### Functions
+
+#### `compressTransactionMessageUsingAddressLookupTables`
+
+Given a transaction message and a mapping of lookup tables to the addresses stored in them, this function will return a new transaction message with the same instructions but with all non-signer accounts that are found in the given lookup tables represented by an `IAccountLookupMeta` instead of an `IAccountMeta`.
+
+This means that these accounts will take up less space in the compiled transaction message. This size reduction is most significant when the transaction includes many accounts from the same lookup table.
+
+```ts
+import { address } from '@solana/addresses';
+import { compressTransactionMessageUsingAddressLookupTables } from '@solana/transaction-messages';
+
+const lookupTableAddress = address('4QwSwNriKPrz8DLW4ju5uxC2TN5cksJx6tPUPj7DGLAW');
+const accountAddress = address('5n2ADjHPsqB4EVUNEX48xRqtnmuLu5XSHDwkJRR98qpM');
+const lookupTableAddresses: AddressesByLookupTableAddress = {
+    [lookupTableAddress]: [accountAddress],
+};
+
+const compressedTransactionMessage = compressTransactionMessageUsingAddressLookupTables(
+    transactionMessage,
+    lookupTableAddresses,
+);
+```

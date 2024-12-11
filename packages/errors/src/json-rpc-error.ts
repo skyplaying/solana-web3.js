@@ -22,7 +22,7 @@ import { safeCaptureStackTrace } from './stack-trace';
 import { getSolanaErrorFromTransactionError } from './transaction-error';
 
 interface RpcErrorResponse {
-    code: number;
+    code: bigint | number;
     data?: unknown;
     message: string;
 }
@@ -61,21 +61,21 @@ export interface RpcSimulateTransactionResult {
                         accounts: number[];
                         data: string;
                         programIdIndex: number;
-                        stack_height?: number;
+                        stackHeight?: number;
                     }
                   | {
                         // Parsed
                         parsed: unknown;
                         program: string;
-                        program_id: string;
-                        stack_height?: number;
+                        programId: string;
+                        stackHeight?: number;
                     }
                   | {
                         // PartiallyDecoded
                         accounts: string[];
                         data: string;
-                        program_id: string;
-                        stack_height?: number;
+                        programId: string;
+                        stackHeight?: number;
                     }
               )[];
           }[]
@@ -88,8 +88,9 @@ export interface RpcSimulateTransactionResult {
     unitsConsumed: number | null;
 }
 
-export function getSolanaErrorFromJsonRpcError({ code, data, message }: RpcErrorResponse): SolanaError {
+export function getSolanaErrorFromJsonRpcError({ code: rawCode, data, message }: RpcErrorResponse): SolanaError {
     let out: SolanaError;
+    const code = Number(rawCode);
     if (code === SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE) {
         const { err, ...preflightErrorContext } = data as RpcSimulateTransactionResult;
         const causeObject = err ? { cause: getSolanaErrorFromTransactionError(err) } : null;

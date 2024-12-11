@@ -1,5 +1,6 @@
 import { SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR, SolanaError } from '@solana/errors';
-import { RpcTransport } from '@solana/rpc-spec';
+import type { RpcTransport } from '@solana/rpc-spec';
+import type { RpcResponse } from '@solana/rpc-spec-types';
 import type Dispatcher from 'undici-types/dispatcher';
 
 import {
@@ -10,7 +11,9 @@ import {
 
 type Config = Readonly<{
     dispatcher_NODE_ONLY?: Dispatcher;
+    fromJson?: (rawResponse: string, payload: unknown) => RpcResponse;
     headers?: AllowedHttpRequestHeaders;
+    toJson?: (payload: unknown) => string;
     url: string;
 }>;
 
@@ -32,7 +35,7 @@ export function createHttpTransport(config: Config): RpcTransport {
     if (__DEV__ && !__NODEJS__ && 'dispatcher_NODE_ONLY' in config) {
         warnDispatcherWasSuppliedInNonNodeEnvironment();
     }
-    const { headers, url } = config;
+    const { fromJson, headers, toJson, url } = config;
     if (__DEV__ && headers) {
         assertIsAllowedHttpRequestHeaders(headers);
     }
@@ -44,8 +47,8 @@ export function createHttpTransport(config: Config): RpcTransport {
     return async function makeHttpRequest<TResponse>({
         payload,
         signal,
-    }: Parameters<RpcTransport>[0]): Promise<TResponse> {
-        const body = JSON.stringify(payload);
+    }: Parameters<RpcTransport>[0]): Promise<RpcResponse<TResponse>> {
+        const body = toJson ? toJson(payload) : JSON.stringify(payload);
         const requestInfo = {
             ...dispatcherConfig,
             body,
@@ -62,10 +65,14 @@ export function createHttpTransport(config: Config): RpcTransport {
         const response = await fetch(url, requestInfo);
         if (!response.ok) {
             throw new SolanaError(SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR, {
+                headers: response.headers,
                 message: response.statusText,
                 statusCode: response.status,
             });
         }
-        return (await response.json()) as TResponse;
+        if (fromJson) {
+            return fromJson(await response.text(), payload) as TResponse;
+        }
+        return await response.json();
     };
 }

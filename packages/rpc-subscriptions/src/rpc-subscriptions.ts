@@ -1,5 +1,3 @@
-import fastStableStringify from '@solana/fast-stable-stringify';
-import { pipe } from '@solana/functional';
 import type { SolanaRpcSubscriptionsApi, SolanaRpcSubscriptionsApiUnstable } from '@solana/rpc-subscriptions-api';
 import { createSolanaRpcSubscriptionsApi } from '@solana/rpc-subscriptions-api';
 import {
@@ -9,27 +7,38 @@ import {
 } from '@solana/rpc-subscriptions-spec';
 import { ClusterUrl } from '@solana/rpc-types';
 
-import { DEFAULT_RPC_CONFIG } from './rpc-default-config';
-import type { RpcSubscriptionsFromTransport } from './rpc-subscriptions-clusters';
-import { getRpcSubscriptionsWithSubscriptionCoalescing } from './rpc-subscriptions-coalescer';
+import { DEFAULT_RPC_SUBSCRIPTIONS_CONFIG } from './rpc-default-config';
 import {
-    createDefaultRpcSubscriptionsTransport,
-    DefaultRpcSubscriptionsTransportConfig,
-} from './rpc-subscriptions-transport';
+    createDefaultSolanaRpcSubscriptionsChannelCreator,
+    DefaultRpcSubscriptionsChannelConfig,
+} from './rpc-subscriptions-channel';
+import type { RpcSubscriptionsFromTransport } from './rpc-subscriptions-clusters';
+import { createDefaultRpcSubscriptionsTransport } from './rpc-subscriptions-transport';
 
-export function createSolanaRpcSubscriptions<
-    TClusterUrl extends ClusterUrl,
-    TApi extends RpcSubscriptionsApiMethods = SolanaRpcSubscriptionsApi,
->(clusterUrl: TClusterUrl, config?: Omit<DefaultRpcSubscriptionsTransportConfig<TClusterUrl>, 'url'>) {
-    const transport = createDefaultRpcSubscriptionsTransport({ url: clusterUrl, ...config });
+type Config<TClusterUrl extends ClusterUrl> = DefaultRpcSubscriptionsChannelConfig<TClusterUrl>;
+
+function createSolanaRpcSubscriptionsImpl<TClusterUrl extends ClusterUrl, TApi extends RpcSubscriptionsApiMethods>(
+    clusterUrl: TClusterUrl,
+    config?: Omit<Config<TClusterUrl>, 'url'>,
+) {
+    const transport = createDefaultRpcSubscriptionsTransport({
+        createChannel: createDefaultSolanaRpcSubscriptionsChannelCreator({ ...config, url: clusterUrl }),
+    });
     return createSolanaRpcSubscriptionsFromTransport<typeof transport, TApi>(transport);
+}
+
+export function createSolanaRpcSubscriptions<TClusterUrl extends ClusterUrl>(
+    clusterUrl: TClusterUrl,
+    config?: Omit<Config<TClusterUrl>, 'url'>,
+) {
+    return createSolanaRpcSubscriptionsImpl<TClusterUrl, SolanaRpcSubscriptionsApi>(clusterUrl, config);
 }
 
 export function createSolanaRpcSubscriptions_UNSTABLE<TClusterUrl extends ClusterUrl>(
     clusterUrl: TClusterUrl,
-    config?: Omit<DefaultRpcSubscriptionsTransportConfig<TClusterUrl>, 'url'>,
+    config?: Omit<Config<TClusterUrl>, 'url'>,
 ) {
-    return createSolanaRpcSubscriptions<TClusterUrl, SolanaRpcSubscriptionsApi & SolanaRpcSubscriptionsApiUnstable>(
+    return createSolanaRpcSubscriptionsImpl<TClusterUrl, SolanaRpcSubscriptionsApi & SolanaRpcSubscriptionsApiUnstable>(
         clusterUrl,
         config,
     );
@@ -39,24 +48,8 @@ export function createSolanaRpcSubscriptionsFromTransport<
     TTransport extends RpcSubscriptionsTransport,
     TApi extends RpcSubscriptionsApiMethods = SolanaRpcSubscriptionsApi,
 >(transport: TTransport) {
-    return pipe(
-        createSubscriptionRpc({
-            api: createSolanaRpcSubscriptionsApi<TApi>(DEFAULT_RPC_CONFIG),
-            transport,
-        }),
-        rpcSubscriptions =>
-            getRpcSubscriptionsWithSubscriptionCoalescing({
-                getDeduplicationKey: (...args) => fastStableStringify(args),
-                rpcSubscriptions,
-            }),
-    ) as RpcSubscriptionsFromTransport<TApi, TTransport>;
-}
-
-export function createSolanaRpcSubscriptionsFromTransport_UNSTABLE<TTransport extends RpcSubscriptionsTransport>(
-    transport: TTransport,
-) {
-    return createSolanaRpcSubscriptionsFromTransport<
-        TTransport,
-        SolanaRpcSubscriptionsApi & SolanaRpcSubscriptionsApiUnstable
-    >(transport);
+    return createSubscriptionRpc({
+        api: createSolanaRpcSubscriptionsApi<TApi>(DEFAULT_RPC_SUBSCRIPTIONS_CONFIG),
+        transport,
+    }) as RpcSubscriptionsFromTransport<TApi, TTransport>;
 }

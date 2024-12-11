@@ -220,10 +220,7 @@ describe('sendTransaction', () => {
         expect.assertions(1);
         const [[secretKey, publicKeyBytes], { value: latestBlockhash }] = await Promise.all([
             (async () => {
-                const keyPair = (await crypto.subtle.generateKey('Ed25519', /* extractable */ false, [
-                    'sign',
-                    'verify',
-                ])) as CryptoKeyPair;
+                const keyPair = await crypto.subtle.generateKey('Ed25519', /* extractable */ false, ['sign', 'verify']);
                 return [keyPair.privateKey, new Uint8Array(await crypto.subtle.exportKey('raw', keyPair.publicKey))];
             })(),
             rpc.getLatestBlockhash({ commitment: 'processed' }).send(),
@@ -250,6 +247,7 @@ describe('sendTransaction', () => {
             new SolanaError(SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE, {
                 accounts: null,
                 cause: new SolanaError(SOLANA_ERROR__TRANSACTION_ERROR__ACCOUNT_NOT_FOUND),
+                innerInstructions: null,
                 logs: [],
                 returnData: null,
                 unitsConsumed: 0,
@@ -284,6 +282,7 @@ describe('sendTransaction', () => {
             new SolanaError(SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE, {
                 accounts: null,
                 cause: new SolanaError(SOLANA_ERROR__TRANSACTION_ERROR__INSUFFICIENT_FUNDS_FOR_FEE),
+                innerInstructions: null,
                 logs: [],
                 returnData: null,
                 unitsConsumed: 0,
@@ -315,6 +314,7 @@ describe('sendTransaction', () => {
             new SolanaError(SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE, {
                 accounts: null,
                 cause: new SolanaError(SOLANA_ERROR__TRANSACTION_ERROR__BLOCKHASH_NOT_FOUND),
+                innerInstructions: null,
                 logs: [],
                 returnData: null,
                 unitsConsumed: 0,
@@ -356,7 +356,7 @@ describe('sendTransaction', () => {
                     'context.__code',
                     SOLANA_ERROR__JSON_RPC__SERVER_ERROR_MIN_CONTEXT_SLOT_NOT_REACHED,
                 ),
-                expect(resultPromise).rejects.toHaveProperty('context.contextSlot', expect.any(Number)),
+                expect(resultPromise).rejects.toHaveProperty('context.contextSlot', expect.any(BigInt)),
             ]);
         });
     });

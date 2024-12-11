@@ -13,7 +13,7 @@ import {
 } from '@solana/codecs';
 import type { GetAccountInfoApi } from '@solana/rpc-api';
 import type { Rpc } from '@solana/rpc-spec';
-import { getLamportsDecoder, getLamportsEncoder, type LamportsUnsafeBeyond2Pow53Minus1 } from '@solana/rpc-types';
+import { getDefaultLamportsDecoder, getDefaultLamportsEncoder, type Lamports } from '@solana/rpc-types';
 
 import { fetchEncodedSysvarAccount, SYSVAR_RENT_ADDRESS } from './sysvar';
 
@@ -27,12 +27,12 @@ type SysvarRentSize = 17;
 export type SysvarRent = Readonly<{
     burnPercent: number;
     exemptionThreshold: number;
-    lamportsPerByteYear: LamportsUnsafeBeyond2Pow53Minus1;
+    lamportsPerByteYear: Lamports;
 }>;
 
 export function getSysvarRentEncoder(): FixedSizeEncoder<SysvarRent, SysvarRentSize> {
     return getStructEncoder([
-        ['lamportsPerByteYear', getLamportsEncoder()],
+        ['lamportsPerByteYear', getDefaultLamportsEncoder()],
         ['exemptionThreshold', getF64Encoder()],
         ['burnPercent', getU8Encoder()],
     ]) as FixedSizeEncoder<SysvarRent, SysvarRentSize>;
@@ -40,7 +40,7 @@ export function getSysvarRentEncoder(): FixedSizeEncoder<SysvarRent, SysvarRentS
 
 export function getSysvarRentDecoder(): FixedSizeDecoder<SysvarRent, SysvarRentSize> {
     return getStructDecoder([
-        ['lamportsPerByteYear', getLamportsDecoder()],
+        ['lamportsPerByteYear', getDefaultLamportsDecoder()],
         ['exemptionThreshold', getF64Decoder()],
         ['burnPercent', getU8Decoder()],
     ]) as FixedSizeDecoder<SysvarRent, SysvarRentSize>;

@@ -1,20 +1,17 @@
 [![npm][npm-image]][npm-url]
 [![npm-downloads][npm-downloads-image]][npm-url]
-[![semantic-release][semantic-release-image]][semantic-release-url]
 <br />
 [![code-style-prettier][code-style-prettier-image]][code-style-prettier-url]
 
 [code-style-prettier-image]: https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square
 [code-style-prettier-url]: https://github.com/prettier/prettier
-[npm-downloads-image]: https://img.shields.io/npm/dm/@solana/signers/experimental.svg?style=flat
-[npm-image]: https://img.shields.io/npm/v/@solana/signers/experimental.svg?style=flat
-[npm-url]: https://www.npmjs.com/package/@solana/signers/v/experimental
-[semantic-release-image]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg
-[semantic-release-url]: https://github.com/semantic-release/semantic-release
+[npm-downloads-image]: https://img.shields.io/npm/dm/@solana/signers/next.svg?style=flat
+[npm-image]: https://img.shields.io/npm/v/@solana/signers/next.svg?style=flat
+[npm-url]: https://www.npmjs.com/package/@solana/signers/v/next
 
 # @solana/signers
 
-This package provides an abstraction layer over signing messages and transactions in Solana. It can be used standalone, but it is also exported as part of the Solana JavaScript SDK [`@solana/web3.js@experimental`](https://github.com/solana-labs/solana-web3.js/tree/master/packages/library).
+This package provides an abstraction layer over signing messages and transactions in Solana. It can be used standalone, but it is also exported as part of the Solana JavaScript SDK [`@solana/web3.js@next`](https://github.com/solana-labs/solana-web3.js/tree/master/packages/library).
 
 You can think of signers as an abstract way to sign messages and transactions. This could be using a Crypto KeyPair, a wallet adapter in the browser, a Noop signer for testing purposes, or anything you want. Here's an example using a `CryptoKeyPair` signer:
 
@@ -316,6 +313,36 @@ import { generateKeyPairSigner } from '@solana/signers';
 const myKeyPairSigner = await generateKeyPairSigner();
 ```
 
+#### `createKeyPairSignerFromBytes()`
+
+A convenience function that creates a new KeyPair from a 64-bytes `Uint8Array` secret key and immediately creates a `KeyPairSigner` from it.
+
+```ts
+import fs from 'fs';
+import { createKeyPairFromBytes } from '@solana/keys';
+
+// Get bytes from local keypair file.
+const keypairFile = fs.readFileSync('~/.config/solana/id.json');
+const keypairBytes = new Uint8Array(JSON.parse(keypairFile.toString()));
+
+// Create a KeyPairSigner from the bytes.
+const { privateKey, publicKey } = await createKeyPairSignerFromBytes(keypairBytes);
+```
+
+#### `createKeyPairSignerFromPrivateKeyBytes()`
+
+A convenience function that creates a new KeyPair from a 32-bytes `Uint8Array` private key and immediately creates a `KeyPairSigner` from it.
+
+```ts
+import { getUtf8Encoder } from '@solana/codecs-strings';
+import { createKeyPairFromPrivateKeyBytes } from '@solana/keys';
+
+const message = getUtf8Encoder().encode('Hello, World!');
+const seed = new Uint8Array(await crypto.subtle.digest('SHA-256', message));
+
+const derivedSigner = await createKeyPairSignerFromPrivateKeyBytes(seed);
+```
+
 #### `isKeyPairSigner()`
 
 A type guard that returns `true` if the provided value is a `KeyPairSigner`.
@@ -470,8 +497,8 @@ const myInstruction: IInstruction = {
     // ...
 };
 
-const signerA: TransactionSigner<'1111'>;
-const signerB: TransactionSigner<'2222'>;
+const mySignerA: TransactionSigner<'1111'>;
+const mySignerB: TransactionSigner<'2222'>;
 const myInstructionWithSigners = addSignersToInstruction([mySignerA, mySignerB], myInstruction);
 
 // myInstructionWithSigners.accounts[0].signer === mySignerA
@@ -528,20 +555,20 @@ const mySignedTransaction = await signTransactionMessageWithSigners(myTransactio
 mySignedTransaction satisfies IFullySignedTransaction;
 ```
 
-#### `signAndSendTransactionWithSigners()`
+#### `signAndSendTransactionMessageWithSigners()`
 
 Extracts all signers inside the provided transaction and uses them to sign it before sending it immediately to the blockchain. It returns the signature of the sent transaction (i.e. its identifier).
 
 ```ts
-const myTransactionSignature = await signAndSendTransactionWithSigners(myTransaction);
+const transactionSignature = await signAndSendTransactionMessageWithSigners(transactionMessage);
 
 // With additional config.
-const myTransactionSignature = await signAndSendTransactionWithSigners(myTransaction, {
+const transactionSignature = await signAndSendTransactionMessageWithSigners(transactionMessage, {
     abortSignal: myAbortController.signal,
 });
 ```
 
-Similarly to the `partiallySignTransactionWithSigners` function, it first uses all `TransactionModifyingSigners` sequentially before using all `TransactionPartialSigners` in parallel. It then sends the transaction using the `TransactionSendingSigner` it identified.
+Similarly to the `partiallySignTransactionMessageWithSigners` function, it first uses all `TransactionModifyingSigners` sequentially before using all `TransactionPartialSigners` in parallel. It then sends the transaction using the `TransactionSendingSigner` it identified.
 
 Here as well, composite transaction signers are treated such that at least one sending signer is used if any. When a `TransactionSigner` implements more than one interface, use it as a:
 
@@ -549,23 +576,23 @@ Here as well, composite transaction signers are treated such that at least one s
 -   `TransactionModifyingSigner`, if no other `TransactionModifyingSigner` exists.
 -   `TransactionPartialSigner`, otherwise.
 
-The provided transaction must be of type `ITransactionWithSingleSendingSigner` meaning that it must contain exactly one `TransactionSendingSigner` inside its account metas. If more than one composite signers implement the `TransactionSendingSigner` interface, one of them will be selected as the sending signer.
+The provided transaction must contain exactly one `TransactionSendingSigner` inside its account metas. If more than one composite signers implement the `TransactionSendingSigner` interface, one of them will be selected as the sending signer. Otherwise, if multiple `TransactionSendingSigners` must be selected, the function will throw an error.
 
-Therefore, you may use the `assertIsTransactionWithSingleSendingSigner()` function to ensure the transaction is of the expected type.
+If you'd like to assert that a transaction makes use of exactly one `TransactionSendingSigner` _before_ calling this function, you may use the `assertIsTransactionMessageWithSingleSendingSigner` function.
 
 ```ts
-assertIsTransactionWithSingleSendingSigner(myTransaction);
-const myTransactionSignature = await signAndSendTransactionWithSigners(myTransaction);
+assertIsTransactionMessageWithSingleSendingSigner(transactionMessage);
+const transactionSignature = await signAndSendTransactionMessageWithSigners(transactionMessage);
 ```
 
 Alternatively, you may use the `isTransactionWithSingleSendingSigner()` function to provide a fallback in case the transaction does not contain any sending signer.
 
 ```ts
 let transactionSignature: SignatureBytes;
-if (isTransactionWithSingleSendingSigner(transaction)) {
-    transactionSignature = await signAndSendTransactionWithSigners(transaction);
+if (isTransactionWithSingleSendingSigner(transactionMessage)) {
+    transactionSignature = await signAndSendTransactionMessageWithSigners(transactionMessage);
 } else {
-    const signedTransaction = await signTransactionWithSigners(transaction);
+    const signedTransaction = await signTransactionMessageWithSigners(transactionMessage);
     const encodedTransaction = getBase64EncodedWireTransaction(signedTransaction);
     transactionSignature = await rpc.sendTransaction(encodedTransaction).send();
 }

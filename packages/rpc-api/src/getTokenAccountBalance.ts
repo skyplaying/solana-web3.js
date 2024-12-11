@@ -1,10 +1,9 @@
 import type { Address } from '@solana/addresses';
-import type { RpcApiMethods } from '@solana/rpc-spec';
 import type { Commitment, SolanaRpcResponse, TokenAmount } from '@solana/rpc-types';
 
-type GetTokenAccountBalanceApiResponse = SolanaRpcResponse<TokenAmount>;
+type GetTokenAccountBalanceApiResponse = TokenAmount;
 
-export interface GetTokenAccountBalanceApi extends RpcApiMethods {
+export type GetTokenAccountBalanceApi = {
     /**
      * Returns the token balance of an SPL Token account
      */
@@ -14,5 +13,5 @@ export interface GetTokenAccountBalanceApi extends RpcApiMethods {
         config?: Readonly<{
             commitment?: Commitment;
         }>,
-    ): GetTokenAccountBalanceApiResponse;
-}
+    ): SolanaRpcResponse<GetTokenAccountBalanceApiResponse>;
+};

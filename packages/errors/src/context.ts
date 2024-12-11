@@ -93,6 +93,7 @@ import {
     SOLANA_ERROR__INVALID_BLOCKHASH_BYTE_LENGTH,
     SOLANA_ERROR__INVALID_NONCE,
     SOLANA_ERROR__INVARIANT_VIOLATION__CACHED_ABORTABLE_ITERABLE_CACHE_ENTRY_MISSING,
+    SOLANA_ERROR__INVARIANT_VIOLATION__DATA_PUBLISHER_CHANNEL_UNIMPLEMENTED,
     SOLANA_ERROR__INVARIANT_VIOLATION__SWITCH_MUST_BE_EXHAUSTIVE,
     SOLANA_ERROR__JSON_RPC__INTERNAL_ERROR,
     SOLANA_ERROR__JSON_RPC__INVALID_PARAMS,
@@ -118,11 +119,12 @@ import {
     SOLANA_ERROR__MALFORMED_BIGINT_STRING,
     SOLANA_ERROR__MALFORMED_NUMBER_STRING,
     SOLANA_ERROR__NONCE_ACCOUNT_NOT_FOUND,
+    SOLANA_ERROR__RPC__API_PLAN_MISSING_FOR_RPC_METHOD,
     SOLANA_ERROR__RPC__INTEGER_OVERFLOW,
     SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR,
     SOLANA_ERROR__RPC__TRANSPORT_HTTP_HEADER_FORBIDDEN,
-    SOLANA_ERROR__RPC_SUBSCRIPTIONS__CANNOT_CREATE_SUBSCRIPTION_REQUEST,
-    SOLANA_ERROR__RPC_SUBSCRIPTIONS__TRANSPORT_FAILED_TO_CONNECT,
+    SOLANA_ERROR__RPC_SUBSCRIPTIONS__CANNOT_CREATE_SUBSCRIPTION_PLAN,
+    SOLANA_ERROR__RPC_SUBSCRIPTIONS__CHANNEL_FAILED_TO_CONNECT,
     SOLANA_ERROR__SIGNER__ADDRESS_CANNOT_HAVE_MULTIPLE_SIGNERS,
     SOLANA_ERROR__SIGNER__EXPECTED_KEY_PAIR_SIGNER,
     SOLANA_ERROR__SIGNER__EXPECTED_MESSAGE_MODIFYING_SIGNER,
@@ -132,12 +134,14 @@ import {
     SOLANA_ERROR__SIGNER__EXPECTED_TRANSACTION_PARTIAL_SIGNER,
     SOLANA_ERROR__SIGNER__EXPECTED_TRANSACTION_SENDING_SIGNER,
     SOLANA_ERROR__SIGNER__EXPECTED_TRANSACTION_SIGNER,
+    SOLANA_ERROR__SUBTLE_CRYPTO__CANNOT_EXPORT_NON_EXTRACTABLE_KEY,
     SOLANA_ERROR__TIMESTAMP_OUT_OF_RANGE,
     SOLANA_ERROR__TRANSACTION__ADDRESS_MISSING,
     SOLANA_ERROR__TRANSACTION__ADDRESSES_CANNOT_SIGN_TRANSACTION,
     SOLANA_ERROR__TRANSACTION__FAILED_TO_DECOMPILE_ADDRESS_LOOKUP_TABLE_CONTENTS_MISSING,
     SOLANA_ERROR__TRANSACTION__FAILED_TO_DECOMPILE_ADDRESS_LOOKUP_TABLE_INDEX_OUT_OF_RANGE,
     SOLANA_ERROR__TRANSACTION__FAILED_TO_DECOMPILE_INSTRUCTION_PROGRAM_ADDRESS_NOT_FOUND,
+    SOLANA_ERROR__TRANSACTION__FAILED_WHEN_SIMULATING_TO_ESTIMATE_COMPUTE_LIMIT,
     SOLANA_ERROR__TRANSACTION__INVOKED_PROGRAMS_CANNOT_PAY_FEES,
     SOLANA_ERROR__TRANSACTION__INVOKED_PROGRAMS_MUST_NOT_BE_WRITABLE,
     SOLANA_ERROR__TRANSACTION__MESSAGE_SIGNATURES_MISMATCH,
@@ -382,7 +386,7 @@ export type SolanaErrorContext = DefaultUnspecifiedErrorContextToUndefined<
             instructionErrorContext?: unknown;
         };
         [SOLANA_ERROR__INSTRUCTION__EXPECTED_TO_HAVE_ACCOUNTS]: {
-            data?: Uint8Array;
+            data?: ReadonlyUint8Array;
             programAddress: string;
         };
         [SOLANA_ERROR__INSTRUCTION__EXPECTED_TO_HAVE_DATA]: {
@@ -402,6 +406,10 @@ export type SolanaErrorContext = DefaultUnspecifiedErrorContextToUndefined<
         };
         [SOLANA_ERROR__INVARIANT_VIOLATION__CACHED_ABORTABLE_ITERABLE_CACHE_ENTRY_MISSING]: {
             cacheKey: string;
+        };
+        [SOLANA_ERROR__INVARIANT_VIOLATION__DATA_PUBLISHER_CHANNEL_UNIMPLEMENTED]: {
+            channelName: string;
+            supportedChannelNames: string[];
         };
         [SOLANA_ERROR__INVARIANT_VIOLATION__SWITCH_MUST_BE_EXHAUSTIVE]: {
             unexpectedValue: unknown;
@@ -440,7 +448,7 @@ export type SolanaErrorContext = DefaultUnspecifiedErrorContextToUndefined<
             __serverMessage: string;
         };
         [SOLANA_ERROR__JSON_RPC__SERVER_ERROR_MIN_CONTEXT_SLOT_NOT_REACHED]: {
-            contextSlot: number;
+            contextSlot: bigint;
         };
         [SOLANA_ERROR__JSON_RPC__SERVER_ERROR_NODE_UNHEALTHY]: {
             numSlotsBehind?: number;
@@ -479,11 +487,15 @@ export type SolanaErrorContext = DefaultUnspecifiedErrorContextToUndefined<
         [SOLANA_ERROR__NONCE_ACCOUNT_NOT_FOUND]: {
             nonceAccountAddress: string;
         };
-        [SOLANA_ERROR__RPC_SUBSCRIPTIONS__CANNOT_CREATE_SUBSCRIPTION_REQUEST]: {
+        [SOLANA_ERROR__RPC_SUBSCRIPTIONS__CANNOT_CREATE_SUBSCRIPTION_PLAN]: {
             notificationName: string;
         };
-        [SOLANA_ERROR__RPC_SUBSCRIPTIONS__TRANSPORT_FAILED_TO_CONNECT]: {
+        [SOLANA_ERROR__RPC_SUBSCRIPTIONS__CHANNEL_FAILED_TO_CONNECT]: {
             errorEvent: Event;
+        };
+        [SOLANA_ERROR__RPC__API_PLAN_MISSING_FOR_RPC_METHOD]: {
+            method: string;
+            params: unknown[];
         };
         [SOLANA_ERROR__RPC__INTEGER_OVERFLOW]: {
             argumentLabel: string;
@@ -494,6 +506,7 @@ export type SolanaErrorContext = DefaultUnspecifiedErrorContextToUndefined<
             value: bigint;
         };
         [SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR]: {
+            headers: Headers;
             message: string;
             statusCode: number;
         };
@@ -527,8 +540,11 @@ export type SolanaErrorContext = DefaultUnspecifiedErrorContextToUndefined<
         [SOLANA_ERROR__SIGNER__EXPECTED_TRANSACTION_SIGNER]: {
             address: string;
         };
+        [SOLANA_ERROR__SUBTLE_CRYPTO__CANNOT_EXPORT_NON_EXTRACTABLE_KEY]: {
+            key: CryptoKey;
+        };
         [SOLANA_ERROR__TIMESTAMP_OUT_OF_RANGE]: {
-            value: number;
+            value: bigint;
         };
         [SOLANA_ERROR__TRANSACTION_ERROR__DUPLICATE_INSTRUCTION]: {
             index: number;
@@ -560,6 +576,9 @@ export type SolanaErrorContext = DefaultUnspecifiedErrorContextToUndefined<
         };
         [SOLANA_ERROR__TRANSACTION__FAILED_TO_DECOMPILE_INSTRUCTION_PROGRAM_ADDRESS_NOT_FOUND]: {
             index: number;
+        };
+        [SOLANA_ERROR__TRANSACTION__FAILED_WHEN_SIMULATING_TO_ESTIMATE_COMPUTE_LIMIT]: {
+            unitsConsumed: number;
         };
         [SOLANA_ERROR__TRANSACTION__INVOKED_PROGRAMS_CANNOT_PAY_FEES]: {
             programAddress: string;

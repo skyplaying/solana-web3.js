@@ -1,15 +1,16 @@
 import {
     createRpcSubscriptionsApi,
+    executeRpcPubSubSubscriptionPlan,
     RpcSubscriptionsApi,
     RpcSubscriptionsApiMethods,
 } from '@solana/rpc-subscriptions-spec';
 import {
     AllowedNumericKeypaths,
-    getDefaultParamsTransformerForSolanaRpc,
-    getDefaultResponseTransformerForSolanaRpc,
+    getDefaultRequestTransformerForSolanaRpc,
+    getDefaultResponseTransformerForSolanaRpcSubscriptions,
     jsonParsedAccountsConfigs,
     KEYPATH_WILDCARD,
-    ParamsTransformerConfig,
+    RequestTransformerConfig,
 } from '@solana/rpc-transformers';
 
 import { AccountNotificationsApi } from './account-notifications';
@@ -44,20 +45,25 @@ export type {
     VoteNotificationsApi,
 };
 
-type Config = ParamsTransformerConfig;
+type Config = RequestTransformerConfig;
 
 function createSolanaRpcSubscriptionsApi_INTERNAL<TApi extends RpcSubscriptionsApiMethods>(
     config?: Config,
 ): RpcSubscriptionsApi<TApi> {
+    const requestTransformer = getDefaultRequestTransformerForSolanaRpc(config);
+    const responseTransformer = getDefaultResponseTransformerForSolanaRpcSubscriptions({
+        allowedNumericKeyPaths: getAllowedNumericKeypaths(),
+    });
     return createRpcSubscriptionsApi<TApi>({
-        parametersTransformer: getDefaultParamsTransformerForSolanaRpc(config) as (params: unknown[]) => unknown[],
-        responseTransformer: getDefaultResponseTransformerForSolanaRpc({
-            allowedNumericKeyPaths: getAllowedNumericKeypaths(),
-        }),
-        subscribeNotificationNameTransformer: (notificationName: string) =>
-            notificationName.replace(/Notifications$/, 'Subscribe'),
-        unsubscribeNotificationNameTransformer: (notificationName: string) =>
-            notificationName.replace(/Notifications$/, 'Unsubscribe'),
+        planExecutor({ request, ...rest }) {
+            return executeRpcPubSubSubscriptionPlan({
+                ...rest,
+                responseTransformer,
+                subscribeRequest: { ...request, methodName: request.methodName.replace(/Notifications$/, 'Subscribe') },
+                unsubscribeMethodName: request.methodName.replace(/Notifications$/, 'Unsubscribe'),
+            });
+        },
+        requestTransformer,
     });
 }
 
@@ -88,7 +94,6 @@ function getAllowedNumericKeypaths(): AllowedNumericKeypaths<
         memoizedKeypaths = {
             accountNotifications: jsonParsedAccountsConfigs.map(c => ['value', ...c]),
             blockNotifications: [
-                ['value', 'block', 'blockTime'],
                 [
                     'value',
                     'block',
